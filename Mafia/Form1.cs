@@ -844,6 +844,7 @@ namespace Mafia
                 {
                     for (int j = players[i].cardNumbers.Count - 1; j >= 0; j--)
                     {
+                        bool changed = false;
                         for (int k = 0; k < j; k++)
                         {
                             int num1 = players[i].cardNumbers[k];
@@ -851,6 +852,7 @@ namespace Mafia
                             int compare = String.Compare(nameOfCard(players[i].cardTypes[k], players[i].cardNumbers[k]), nameOfCard(players[i].cardTypes[k + 1], players[i].cardNumbers[k + 1]));
                             if ((compare > 0 && players[i].cardTypes[k] != players[i].cardTypes[k + 1]) || (compare < 0 && players[i].cardTypes[k] == players[i].cardTypes[k + 1] && num1 > num2))
                             {
+                                changed = true;
                                 int pom = players[i].cardTypes[k];
                                 players[i].cardTypes[k] = players[i].cardTypes[k + 1];
                                 players[i].cardTypes[k + 1] = pom;
@@ -859,6 +861,7 @@ namespace Mafia
                                 players[i].cardNumbers[k + 1] = pom;
                             }
                         }
+                        if (!changed) { break; }
                     }
                 }
                 string newContent = "";
@@ -3527,7 +3530,7 @@ namespace Mafia
                 bullet.trajectory.Add(-1);
             }
             //magnet
-            else if (players[leftPlayer].hasMagnet && !bullet.usedMagnet && players[leftPlayer].alive)
+            else if (leftPlayer != -1 && players[leftPlayer].hasMagnet && !bullet.usedMagnet && players[leftPlayer].alive)
             {
                 this.Invoke((MethodInvoker)delegate
                 {
@@ -3537,7 +3540,7 @@ namespace Mafia
                 report[reportNumber] += ", był przicióngnyty magnetym";
                 shoot(leftPlayer, target, mafia, reportNumber, false, sniper);
             }
-            else if (players[rightPlayer].hasMagnet && !bullet.usedMagnet && players[rightPlayer].alive)
+            else if (rightPlayer != -1 && players[rightPlayer].hasMagnet && !bullet.usedMagnet && players[rightPlayer].alive)
             {
                 this.Invoke((MethodInvoker)delegate
                 {
@@ -3905,7 +3908,7 @@ namespace Mafia
                     });
                     report[21] += "Jednego gracza zachróniła gas maska ";
                 }
-                else
+                else if(leftPlayer != -1)
                 {
                     //doktor
                     if (players[leftPlayer].hasDoktor)
@@ -3990,7 +3993,7 @@ namespace Mafia
                     });
                     report[21] += " a drugigo gracza zachróniła gas maska.";
                 }
-                else if (numberOfAlivePlayers > 2)
+                else if (rightPlayer != -1 && numberOfAlivePlayers > 2)
                 {
                     //doktor
                     if (players[rightPlayer].hasDoktor)
