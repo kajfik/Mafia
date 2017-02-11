@@ -157,7 +157,6 @@ namespace Mafia
         {
             public int[] position = new int[2];
             public bool alive = true;
-            // number of player, number of card - % 100, / 1000
             public List<int> cardNumbers;
             public List<int> cardTypes;
             public string name;
