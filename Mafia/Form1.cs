@@ -232,7 +232,6 @@ namespace Mafia
             public List<int> wakedPlayers = new List<int>();
             public int votedShot;
             public int addRemoveCard = 0;
-            public bool endNight;
             public int selectedPlayer;
             public int graczKíeryKliko = 0;
             public int tunel1, tunel2;
@@ -276,6 +275,14 @@ namespace Mafia
             public int player;
             public int uses;
             public bool inGame;
+
+            public Card(string name, int player, int uses, bool inGame)
+            {
+                this.name = name;
+                this.player = player;
+                this.uses = uses;
+                this.inGame = inGame;
+            }
         }
 
         [Serializable]public struct Cards
@@ -469,6 +476,10 @@ namespace Mafia
                 initializeCards();
                 numOfPlayersNumericUpDown.Focus();
                 posunyciDoktora = rnd.Next(2);
+                for (int i = 0; i < numberOfReports; i++)
+                {
+                    report[i] = "";
+                }
             }
             catch (Exception exception1)
             {
@@ -486,18 +497,12 @@ namespace Mafia
                     cards[i].cards = new List<Card>();
                     for(int j = 0; j < amountOfSpecificCards[i]; j++)
                     {
-                        cards[i].cards.Add(new Card());
+                        cards[i].cards.Add(new Card(cardNames[i], -1, 1, true));
                     }
                 }
                 
                 for (int i = 0; i < numOfSpecificCards; i++)
                 {
-                    for (int j = 0; j < amountOfSpecificCards[i]; j++)
-                    {
-                        cards[i].cards[j].name = cardNames[i];
-                        cards[i].cards[j].inGame = true;
-                        cards[i].cards[j].uses = 1;
-                    }
                     cards[i].numInGame = amountOfSpecificCards[i];
                 };
                 cards[(int)cardTypeNumber.slepyKat].cards[0].uses = 2;
@@ -1023,8 +1028,23 @@ namespace Mafia
                     }
                 }
             }
+            string raport = "";
+            for (int i = 0; i < numberOfReports; i++)
+            {
+                if (report[i] != "")
+                {
+                    raport += report[i] + endl;
+                    report[i] = "";
+                }
+            }
+            
             this.Invoke((MethodInvoker)delegate
             {
+                if (raport != "")
+                {
+                    InfoRTB.Text += endl + raport;
+                }
+                    
                 yesButton.Enabled = false;
                 yesButton.Visible = false;
                 noButton.Enabled = false;
@@ -1053,6 +1073,7 @@ namespace Mafia
         {
             try
             {
+                isNight = true;
                 numOfNight++;
                 matrix = false;
                 grabarz = false;
@@ -1061,6 +1082,20 @@ namespace Mafia
                 for (int i = 0; i < 3; i++)
                 {
                     tunnels[i, 0] = -1;
+                }
+                string raport = "";
+                for (int i = 0; i < numberOfReports; i++)
+                {
+                    if (report[i] != "")
+                    {
+                        raport = report[i] + endl;
+                    }
+                    report[i] = "";
+                }
+                if(raport != "")
+                {
+                    raport += endl;
+                    drawPlayersCardsRTB();
                 }
                 resetBullet();
                 this.Invoke((MethodInvoker)delegate
@@ -1105,6 +1140,8 @@ namespace Mafia
                     yesButton.Enabled = false;
                     noButton.Enabled = false;
                     shotButton.Text = "Rozpocznij dzień";
+                    InfoRTB.Text = raport + "Zaczyno noc i miasteczko idzie spać..." + endl;
+                    InfoLabel.Focus();
                 });
             }
             catch (Exception exception1)
@@ -1132,14 +1169,8 @@ namespace Mafia
                     if (nightPhase == 0)
                     {
                         //initializing
-                        isNight = true;
                         initNight();
-                        for (int i = 0; i < numberOfReports; i++)
-                        {
-                            report[i] = "";
-                        }
-                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text = ""; InfoRTB.Text += "Zaczyno noc i miasteczko idzie spać..." + endl; InfoLabel.Focus(); });
-
+                        
                         //jailer
                         int cardType = (int)cardTypeNumber.jailer;
                         int cardNumber = 0;
@@ -2093,7 +2124,7 @@ namespace Mafia
                                 Shot shot = new Shot();
                                 shot.type = 1;
                                 shot.target = clickedPlayer; shot.from = player; shot.bulletNumber = i;
-                                shot.textInfo2RTB = ">>> Gracz " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                shot.textInfo2RTB = ">>> Matrix " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                 shots.Add(shot);
                                 if (matrixBullets - i - 1 > 0)
                                 {
@@ -2126,6 +2157,35 @@ namespace Mafia
                             }
                         }
                         shots.Clear();
+
+                        int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
+                        if(players[playerWithKuskona].alive && kuskonaZyskolMraka)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                Info2RTB.Text += "Kuskona " + players[playerWithKuskona].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                            });
+                            report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
+                            players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                            players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKuskona, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                            nextMrakoszlap++;
+                        }
+                        int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
+                        if (players[playerWithGandalf].alive && gandalfZyskolMraka)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                Info2RTB.Text += "Gandalf " + players[playerWithGandalf].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                            });
+                            report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
+                            players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                            players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGandalf, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                            nextMrakoszlap++;
+                        }
                         int playerWithPijavica = cards[(int)cardTypeNumber.pijavica].cards[0].player;
                         if (players[playerWithPijavica].alive)
                         {
@@ -2138,6 +2198,8 @@ namespace Mafia
                                 report[22] += "Pijawica zyskała mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                                 players[playerWithPijavica].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                 players[playerWithPijavica].cardNumbers.Add(nextMrakoszlap);
+                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithPijavica, 1, true));
+                                cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                 nextMrakoszlap++;
                             }
                         }
@@ -2153,6 +2215,8 @@ namespace Mafia
                                 report[23] = "Kobra zyskała mrakoszlapa " + (nextMrakoszlap + 1) + " a zniszczyła pijawice.";
                                 players[playerWithKobra].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                 players[playerWithKobra].cardNumbers.Add(nextMrakoszlap);
+                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKobra, 1, true));
+                                cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                 nextMrakoszlap++;
                                 cards[(int)cardTypeNumber.pijavica].cards[0].uses--;
                                 cards[(int)cardTypeNumber.kobra].cards[0].uses--;
@@ -2172,6 +2236,8 @@ namespace Mafia
                                     report[24] += "Grabarz zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                                     players[playerWithGrabarz].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                     players[playerWithGrabarz].cardNumbers.Add(nextMrakoszlap);
+                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGrabarz, 1, true));
+                                    cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                     nextMrakoszlap++;
                                 }
                             }
@@ -2188,6 +2254,8 @@ namespace Mafia
                                 report[25] = "Szklorz zrobił zwierciadło " + (nextZwierciadlo + 1) + ".";
                                 players[playerWithSklenar].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
                                 players[playerWithSklenar].cardNumbers.Add(nextZwierciadlo);
+                                cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo], playerWithSklenar, 1, true));
+                                cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
                                 nextZwierciadlo++;
                             }
                         }
@@ -2208,6 +2276,7 @@ namespace Mafia
                             return 1;
                         }
                         wants2("");
+                        report[0] = "Budzi se miasteczko palermo." + endl;
                         if (undo) { return 1; }
                         if (wantsUse)
                         {
@@ -2221,13 +2290,7 @@ namespace Mafia
                     if (nightPhase == 0)
                     {
                         //initializing
-                        isNight = true;
                         initNight();
-                        for (int i = 0; i < numberOfReports; i++)
-                        {
-                            report[i] = "";
-                        }
-                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text = ""; InfoRTB.Text += "Zaczyno noc i miasteczko idzie spać..." + endl; InfoLabel.Focus(); });
 
                         //budzyni mafii na poczontku pjyrszej nocy
                         if (numOfNight == 1)
@@ -3017,7 +3080,7 @@ namespace Mafia
                                 Shot shot = new Shot();
                                 shot.type = 1;
                                 shot.target = clickedPlayer; shot.from = player; shot.bulletNumber = i;
-                                shot.textInfo2RTB = ">>> Gracz " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                shot.textInfo2RTB = ">>> Matrix " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                 shots.Add(shot);
                                 if (matrixBullets - i - 1 > 0)
                                 {
@@ -3050,6 +3113,35 @@ namespace Mafia
                             }
                         }
                         shots.Clear();
+
+                        int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
+                        if (players[playerWithKuskona].alive && kuskonaZyskolMraka)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                Info2RTB.Text += "Kuskona " + players[playerWithKuskona].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                            });
+                            report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
+                            players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                            players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKuskona, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                            nextMrakoszlap++;
+                        }
+                        int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
+                        if (players[playerWithGandalf].alive && gandalfZyskolMraka)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                Info2RTB.Text += "Gandalf " + players[playerWithGandalf].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                            });
+                            report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
+                            players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                            players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGandalf, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                            nextMrakoszlap++;
+                        }
                         int playerWithPijavica = cards[(int)cardTypeNumber.pijavica].cards[0].player;
                         if (players[playerWithPijavica].alive)
                         {
@@ -3062,6 +3154,8 @@ namespace Mafia
                                 report[22] += "Pijawica zyskała mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                                 players[playerWithPijavica].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                 players[playerWithPijavica].cardNumbers.Add(nextMrakoszlap);
+                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithPijavica, 1, true));
+                                cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                 nextMrakoszlap++;
                             }
                         }
@@ -3077,6 +3171,8 @@ namespace Mafia
                                 report[23] = "Kobra zyskała mrakoszlapa " + (nextMrakoszlap + 1) + " a zniszczyła pijawice.";
                                 players[playerWithKobra].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                 players[playerWithKobra].cardNumbers.Add(nextMrakoszlap);
+                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKobra, 1, true));
+                                cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                 nextMrakoszlap++;
                                 cards[(int)cardTypeNumber.pijavica].cards[0].uses--;
                                 cards[(int)cardTypeNumber.kobra].cards[0].uses--;
@@ -3096,6 +3192,8 @@ namespace Mafia
                                     report[24] += "Grabarz zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                                     players[playerWithGrabarz].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                     players[playerWithGrabarz].cardNumbers.Add(nextMrakoszlap);
+                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGrabarz, 1, true));
+                                    cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                     nextMrakoszlap++;
                                 }
                             }
@@ -3112,6 +3210,8 @@ namespace Mafia
                                 report[25] = "Szklorz zrobił zwierciadło " + (nextZwierciadlo + 1) + ".";
                                 players[playerWithSklenar].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
                                 players[playerWithSklenar].cardNumbers.Add(nextZwierciadlo);
+                                cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo], playerWithSklenar, 1, true));
+                                cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
                                 nextZwierciadlo++;
                             }
                         }
@@ -3132,6 +3232,7 @@ namespace Mafia
                             return 1;
                         }
                         wants2("");
+                        report[0] = "Budzi se miasteczko palermo." + endl;
                         if (undo || wantsUse)
                         {
                             return 1;
@@ -3153,7 +3254,8 @@ namespace Mafia
             {
                 isNight = false;
                 endNight = false;
-                
+                kuskonaZyskolMraka = false;
+                gandalfZyskolMraka = false;
                 report[0] = "Budzi se miasteczko palermo." + endl;
                 for (int i = 0; i < 3; i++)
                 {
@@ -3171,6 +3273,7 @@ namespace Mafia
                     if (report[i] != "")
                     {
                         raport += report[i] + endl;
+                        report[i] = "";
                     }
                 }
                 isNight = false;
@@ -3201,6 +3304,34 @@ namespace Mafia
                 if (wantsUse)
                 {
                     canClickPictureBox = false;
+                    int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
+                    if (players[playerWithKuskona].alive && kuskonaZyskolMraka)
+                    {
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += "Kuskona " + players[playerWithKuskona].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                        });
+                        report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
+                        players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                        players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
+                        cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKuskona, 1, true));
+                        cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                        nextMrakoszlap++;
+                    }
+                    int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
+                    if (players[playerWithGandalf].alive && gandalfZyskolMraka)
+                    {
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += "Gandalf " + players[playerWithGandalf].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                        });
+                        report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
+                        players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                        players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
+                        cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGandalf, 1, true));
+                        cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                        nextMrakoszlap++;
+                    }
                     this.Invoke((MethodInvoker)delegate
                     {
                         votedButton.Enabled = false;
@@ -3247,7 +3378,6 @@ namespace Mafia
             state.canClickPictureBox = canClickPictureBox;
             state.clickedPlayer = clickedPlayer;
             state.duchBoboExhibowolPoUmrziciu = duchBoboExhibowolPoUmrziciu;
-            state.endNight = endNight;
             state.evenNight = evenNight;
             state.gandalfZyskolMraka = gandalfZyskolMraka;
             state.grabarz = grabarz;
@@ -3331,7 +3461,6 @@ namespace Mafia
             canClickPictureBox = state.canClickPictureBox;
             clickedPlayer = state.clickedPlayer;
             duchBoboExhibowolPoUmrziciu = state.duchBoboExhibowolPoUmrziciu;
-            endNight = state.endNight;
             evenNight = state.evenNight;
             gandalfZyskolMraka = state.gandalfZyskolMraka;
             grabarz = state.grabarz;
@@ -3529,7 +3658,15 @@ namespace Mafia
                 });
                 bullet.usedMagnet = true;
                 report[reportNumber] += ", był przicióngnyty magnetym";
-                shoot(leftPlayer, target, mafia, reportNumber, false, sniper);
+                if (players[leftPlayer].alive)
+                {
+                    shoot(leftPlayer, target, mafia, reportNumber, false, sniper);
+                }
+                else
+                {
+                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[leftPlayer].name + " uż je mortwy." + endl; InfoLabel.Focus(); });
+                    report[reportNumber] = " na gracza, kiery uż był mortwy.";
+                }
             }
             else if (rightPlayer != -1 && players[rightPlayer].hasMagnet && !bullet.usedMagnet && players[rightPlayer].alive)
             {
@@ -3539,7 +3676,15 @@ namespace Mafia
                 });
                 bullet.usedMagnet = true;
                 report[reportNumber] += ", był przicióngnyty magnetym";
-                shoot(rightPlayer, target, mafia, reportNumber, false, sniper);
+                if (players[rightPlayer].alive)
+                {
+                    shoot(rightPlayer, target, mafia, reportNumber, false, sniper);
+                }
+                else
+                {
+                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[rightPlayer].name + " uż je mortwy." + endl; InfoLabel.Focus(); });
+                    report[reportNumber] += " na gracza, kiery uż był mortwy.";
+                }
             }
             //tunel
             else if (useTunnel)
@@ -3558,7 +3703,15 @@ namespace Mafia
                         });
                         report[reportNumber] += ", przelecioł tunelym";
                         bullet.usedTunnel[players[target].tunnels[i][1]] = true;
-                        shoot(players[target].tunnels[i][0], target, mafia, reportNumber, false, sniper);
+                        if (players[players[target].tunnels[i][0]].alive)
+                        {
+                            shoot(players[target].tunnels[i][0], target, mafia, reportNumber, false, sniper);
+                        }
+                        else
+                        {
+                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[players[target].tunnels[i][0]].name + " uż je mortwy." + endl; InfoLabel.Focus(); });
+                            report[reportNumber] += " na gracza, kiery uż był mortwy.";
+                        }
                     }
                 }
             }
@@ -3624,7 +3777,15 @@ namespace Mafia
                 report[reportNumber] += ", rozbiło se zwierciadło " + (players[target].cardNumbers[item] + 1) + ", pocisk se wrócił z powrotym";
                 players[target].cardTypes.RemoveAt(item);
                 players[target].cardNumbers.RemoveAt(item);
-                shoot(from, target, mafia, reportNumber, false, sniper);
+                if (players[from].alive)
+                {
+                    shoot(from, target, mafia, reportNumber, false, sniper);
+                }
+                else
+                {
+                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[from].name + " uż je mortwy." + endl; InfoLabel.Focus(); });
+                    report[reportNumber] += " na gracza, kiery uż był mortwy.";
+                }
             }
             //neprustrzelno westa
             else if (players[target].cardTypes.Contains(3))
@@ -3699,7 +3860,7 @@ namespace Mafia
                         Info2RTB.Text += "Gracz " + players[target].name + " był poślinióny, ale też posypany pioskym." + endl; InfoLabel.Focus();
                     });
                 }
-                //pocisk od snipera rozbila zwierciadlo
+                //pocisk od snipera rozbil zwierciadlo
                 if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && sniper)
                 {
                     item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
@@ -3721,7 +3882,7 @@ namespace Mafia
                         players[target].numberOfBloto--;
                     }
                 }
-                //pocisk rozbila zwierciadlo pochlapane blotym
+                //pocisk rozbil zwierciadlo pochlapane blotym
                 else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && players[target].numberOfBloto > 0)
                 {
                     item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
@@ -3752,38 +3913,14 @@ namespace Mafia
                     pijawicaMrakoszlaps++;
                 }
                 //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
-                if (players[target].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka)
+                if (players[target].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
                 {
-                    int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                    if (players[playerWithKuskona].alive)
-                    {
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            Info2RTB.Text += "Kuskona " + players[playerWithKuskona].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                        });
-                        report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
-                        players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                        players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                        nextMrakoszlap++;
-                        kuskonaZyskolMraka = true;
-                    }
+                    kuskonaZyskolMraka = true;
                 }
                 //jesli to je kuskona, tak gandalf zyskuje mrakoszlap
-                if (players[target].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka)
+                if (players[target].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka && players[cards[(int)cardTypeNumber.gandalf].cards[0].player].alive)
                 {
-                    int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                    if (players[playerWithGandalf].alive)
-                    {
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            Info2RTB.Text += "Gandalf " + players[playerWithGandalf].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                        });
-                        report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
-                        players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                        players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                        nextMrakoszlap++;
-                        gandalfZyskolMraka = true;
-                    }
+                    gandalfZyskolMraka = true;
                 }
                 //jesli grabarz pouzyl swojom funkcje, tak dostanie mrakoszlapa
                 if (grabarz)
@@ -3925,36 +4062,14 @@ namespace Mafia
                             pijawicaMrakoszlaps++;
                         }
                         //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
-                        if (players[leftPlayer].cardTypes.Contains((int)cardTypeNumber.gandalf))
+                        if (players[leftPlayer].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
                         {
-                            int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                            if (players[playerWithKuskona].alive)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += "Kuskona " + players[playerWithKuskona].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
-                                players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                                nextMrakoszlap++;
-                            }
+                            kuskonaZyskolMraka = true;
                         }
                         //jesli to je kuskona, tak gandalf zyskuje mrakoszlap
-                        if (players[leftPlayer].cardTypes.Contains((int)cardTypeNumber.kusKona))
+                        if (players[leftPlayer].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka && players[cards[(int)cardTypeNumber.gandalf].cards[0].player].alive)
                         {
-                            int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                            if (players[playerWithGandalf].alive)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += "Gandalf " + players[playerWithGandalf].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
-                                players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                                nextMrakoszlap++;
-                            }
+                            gandalfZyskolMraka = true;
                         }
                         //jesli grabarz pouzyl swojom funkcje, tak dostanie mrakoszlapa
                         if (grabarz)
@@ -4010,36 +4125,14 @@ namespace Mafia
                             pijawicaMrakoszlaps++;
                         }
                         //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
-                        if (players[rightPlayer].cardTypes.Contains((int)cardTypeNumber.gandalf))
+                        if (players[rightPlayer].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
                         {
-                            int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                            if (players[playerWithKuskona].alive)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += "Kuskona " + players[playerWithKuskona].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
-                                players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                                nextMrakoszlap++;
-                            }
+                            kuskonaZyskolMraka = true;
                         }
                         //jesli to je kuskona, tak gandalf zyskuje mrakoszlap
-                        if (players[rightPlayer].cardTypes.Contains((int)cardTypeNumber.kusKona))
+                        if (players[rightPlayer].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka && players[cards[(int)cardTypeNumber.gandalf].cards[0].player].alive)
                         {
-                            int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                            if (players[playerWithGandalf].alive)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += "Gandalf " + players[playerWithGandalf].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
-                                players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                                nextMrakoszlap++;
-                            }
+                            gandalfZyskolMraka = true;
                         }
                         //jesli grabarz pouzyl swojom funkcje, tak dostanie mrakoszlapa
                         if (grabarz)
@@ -4069,87 +4162,63 @@ namespace Mafia
             }
         }
 
-        public void matrixShoot(int player, int from, int bulletNumber)
+        public void matrixShoot(int target, int from, int bulletNumber)
         {
             try
             {
                 bullet.trajectory.Add(from);
-                bullet.trajectory.Add(player);
+                bullet.trajectory.Add(target);
                 //neprustrzelno westa
-                if (players[player].cardTypes.Contains((int)cardTypeNumber.neprustrzelnoWesta))
+                if (players[target].cardTypes.Contains((int)cardTypeNumber.neprustrzelnoWesta))
                 {
-                    int item = players[player].cardTypes.FindIndex(x => x == (int)cardTypeNumber.neprustrzelnoWesta);
+                    int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.neprustrzelnoWesta);
                     this.Invoke((MethodInvoker)delegate
                     {
-                        Info2RTB.Text += "Gracz " + players[player].name + " stracił kewlar " + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                        Info2RTB.Text += "Gracz " + players[target].name + " stracił kewlar " + (players[target].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                     });
-                    report[9 + bulletNumber] += " a umrził kewlar " + (players[player].cardNumbers[item] + 1) + ".";
-                    players[player].cardTypes.RemoveAt(item);
-                    players[player].cardNumbers.RemoveAt(item);
+                    report[9 + bulletNumber] += " a umrził kewlar " + (players[target].cardNumbers[item] + 1) + ".";
+                    players[target].cardTypes.RemoveAt(item);
+                    players[target].cardNumbers.RemoveAt(item);
                 }
                 //mrakoszlap
-                else if (players[player].cardTypes.Contains((int)cardTypeNumber.mrakoszlap))
+                else if (players[target].cardTypes.Contains((int)cardTypeNumber.mrakoszlap))
                 {
-                    int item = players[player].cardTypes.FindIndex(x => x == (int)cardTypeNumber.mrakoszlap);
+                    int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.mrakoszlap);
                     this.Invoke((MethodInvoker)delegate
                     {
-                        Info2RTB.Text += "Gracz " + players[player].name + " stracił mrakoszlapa " + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                        Info2RTB.Text += "Gracz " + players[target].name + " stracił mrakoszlapa " + (players[target].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                     });
-                    report[9 + bulletNumber] += " a umrził mrakoszlap " + (players[player].cardNumbers[item] + 1) + ".";
-                    if (players[player].hasPijavica)
+                    report[9 + bulletNumber] += " a umrził mrakoszlap " + (players[target].cardNumbers[item] + 1) + ".";
+                    if (players[target].hasPijavica)
                     {
                         pijawicaMrakoszlaps++;
                     }
                     //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
-                    if (players[player].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka)
+                    if (players[target].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
                     {
-                        int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                        if (players[playerWithKuskona].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                Info2RTB.Text += "Kuskona " + players[playerWithKuskona].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                            });
-                            report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
-                            players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                            players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                            nextMrakoszlap++;
-                            kuskonaZyskolMraka = true;
-                        }
+                        kuskonaZyskolMraka = true;
                     }
                     //jesli to je kuskona, tak gandalf zyskuje mrakoszlap
-                    if (players[player].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka)
+                    if (players[target].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka && players[cards[(int)cardTypeNumber.gandalf].cards[0].player].alive)
                     {
-                        int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                        if (players[playerWithGandalf].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                Info2RTB.Text += "Gandalf " + players[playerWithGandalf].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                            });
-                            report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
-                            players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                            players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                            nextMrakoszlap++;
-                            gandalfZyskolMraka = true;
-                        }
+                        gandalfZyskolMraka = true;
                     }
                     //jesli grabarz pouzyl swojom funkcje, tak dostanie mrakoszlapa
                     if (grabarz)
                     {
                         grabarzMrakoszlaps++;
                     }
-                    players[player].cardTypes.RemoveAt(item);
-                    players[player].cardNumbers.RemoveAt(item);
+                    players[target].cardTypes.RemoveAt(item);
+                    players[target].cardNumbers.RemoveAt(item);
                 }
                 //umrzil
                 else
                 {
-                    if (players[player].hasPijavica)
+                    if (players[target].hasPijavica)
                     {
                         pijawicaMrakoszlaps++;
                     }
-                    death(player, 9 + bulletNumber);
+                    death(target, 9 + bulletNumber);
                 }
                 drawPlayersCardsRTB();
                 this.Invoke((MethodInvoker)delegate { drawPlayers(); });
@@ -4204,38 +4273,14 @@ namespace Mafia
                             InfoRTB.Text += "Umrził mrakoszlap " + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                         });
                         //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
-                        if (players[player].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka)
+                        if (players[player].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
                         {
-                            int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                            if (players[playerWithKuskona].alive)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += "Kuskona " + players[playerWithKuskona].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                    InfoRTB.Text += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                                nextMrakoszlap++;
-                                kuskonaZyskolMraka = true;
-                            }
+                            kuskonaZyskolMraka = true;
                         }
                         //jesli to je kuskona, tak gandalf zyskuje mrakoszlap
-                        if (players[player].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka)
+                        if (players[player].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka && players[cards[(int)cardTypeNumber.gandalf].cards[0].player].alive)
                         {
-                            int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                            if (players[playerWithGandalf].alive)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += "Gandalf " + players[playerWithGandalf].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                    InfoRTB.Text += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                                nextMrakoszlap++;
-                                gandalfZyskolMraka = true;
-                            }
+                            gandalfZyskolMraka = true;
                         }
                         players[player].cardTypes.RemoveAt(item);
                         players[player].cardNumbers.RemoveAt(item);
@@ -4288,38 +4333,14 @@ namespace Mafia
                             InfoRTB.Text += "Umrził mrakoszlap " + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                         });
                         //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
-                        if (players[player].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka)
+                        if (players[player].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
                         {
-                            int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                            if (players[playerWithKuskona].alive)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += "Kuskona " + players[playerWithKuskona].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                    InfoRTB.Text += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                                nextMrakoszlap++;
-                                kuskonaZyskolMraka = true;
-                            }
+                            kuskonaZyskolMraka = true;
                         }
                         //jesli to je kuskona, tak gandalf zyskuje mrakoszlap
-                        if (players[player].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka)
+                        if (players[player].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka && players[cards[(int)cardTypeNumber.gandalf].cards[0].player].alive)
                         {
-                            int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                            if (players[playerWithGandalf].alive)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += "Gandalf " + players[playerWithGandalf].name + " zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                    InfoRTB.Text += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                                nextMrakoszlap++;
-                                gandalfZyskolMraka = true;
-                            }
+                            gandalfZyskolMraka = true;
                         }
                         players[player].cardTypes.RemoveAt(item);
                         players[player].cardNumbers.RemoveAt(item);
@@ -4513,6 +4534,8 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                     players[player].cardNumbers.Add(nextMrakoszlap);
+                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], player, 1, true));
+                                    cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                     nextMrakoszlap++;
                                 }
                                 //neprustrzelno westa
@@ -4524,6 +4547,8 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.neprustrzelnoWesta);
                                     players[player].cardNumbers.Add(nextKewlar);
+                                    cards[(int)cardTypeNumber.neprustrzelnoWesta].cards.Add(new Card(cardNames[(int)cardTypeNumber.neprustrzelnoWesta], player, 1, true));
+                                    cards[(int)cardTypeNumber.neprustrzelnoWesta].numInGame++;
                                     nextKewlar++;
                                 }
                                 //zwierciadlo
@@ -4535,6 +4560,8 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
                                     players[player].cardNumbers.Add(nextZwierciadlo);
+                                    cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo], player, 1, true));
+                                    cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
                                     nextZwierciadlo++;
                                 }
                                 //imunita
@@ -4546,6 +4573,8 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.imunita);
                                     players[player].cardNumbers.Add(nextImunita);
+                                    cards[(int)cardTypeNumber.imunita].cards.Add(new Card(cardNames[(int)cardTypeNumber.imunita], player, 1, true));
+                                    cards[(int)cardTypeNumber.imunita].numInGame++;
                                     nextImunita++;
                                 }
                                 //prowazochodec
@@ -4557,6 +4586,8 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.prowazochodec);
                                     players[player].cardNumbers.Add(nextProwazochodec);
+                                    cards[(int)cardTypeNumber.prowazochodec].cards.Add(new Card(cardNames[(int)cardTypeNumber.prowazochodec], player, 1, true));
+                                    cards[(int)cardTypeNumber.prowazochodec].numInGame++;
                                     nextProwazochodec++;
                                 }
                                 drawPlayersCardsRTB();
@@ -4778,25 +4809,25 @@ namespace Mafia
         {
             int cardType = players[selectedPlayer].cardTypes[removeCardCombobox.SelectedIndex];
             int cardNumber = players[selectedPlayer].cardNumbers[removeCardCombobox.SelectedIndex];
-            if (cardType % 100 == (int)cardTypeNumber.mrakoszlap || 
-                cardType % 100 == (int)cardTypeNumber.imunita || 
-                cardType % 100 == (int)cardTypeNumber.prowazochodec || 
-                cardType % 100 == (int)cardTypeNumber.neprustrzelnoWesta || 
-                cardType % 100 == (int)cardTypeNumber.slina || 
-                cardType % 100 == (int)cardTypeNumber.pijavica || 
-                cardType % 100 == (int)cardTypeNumber.zwierciadlo || 
-                cardType % 100 == (int)cardTypeNumber.terorista || 
-                cardType % 100 == (int)cardTypeNumber.meciar || 
-                cardType % 100 == (int)cardTypeNumber.kovac || 
-                cardType % 100 == (int)cardTypeNumber.alCapone || 
-                cardType % 100 == (int)cardTypeNumber.ateista || 
-                cardType % 100 == (int)cardTypeNumber.anarchista || 
-                cardType % 100 == (int)cardTypeNumber.sklenar || 
-                cardType % 100 == (int)cardTypeNumber.masowyWrah || 
-                cardType % 100 == (int)cardTypeNumber.luneta || 
-                cardType % 100 == (int)cardTypeNumber.grabarz || 
-                cardType % 100 == (int)cardTypeNumber.panCzasu || 
-                cardType % 100 == (int)cardTypeNumber.jozinZBazin)
+            if (cardType == (int)cardTypeNumber.mrakoszlap || 
+                cardType == (int)cardTypeNumber.imunita || 
+                cardType == (int)cardTypeNumber.prowazochodec || 
+                cardType == (int)cardTypeNumber.neprustrzelnoWesta || 
+                cardType == (int)cardTypeNumber.slina || 
+                cardType == (int)cardTypeNumber.pijavica || 
+                cardType == (int)cardTypeNumber.zwierciadlo || 
+                cardType == (int)cardTypeNumber.terorista || 
+                cardType == (int)cardTypeNumber.meciar || 
+                cardType == (int)cardTypeNumber.kovac || 
+                cardType == (int)cardTypeNumber.alCapone || 
+                cardType == (int)cardTypeNumber.ateista || 
+                cardType == (int)cardTypeNumber.anarchista || 
+                cardType == (int)cardTypeNumber.sklenar || 
+                cardType == (int)cardTypeNumber.masowyWrah || 
+                cardType == (int)cardTypeNumber.luneta || 
+                cardType == (int)cardTypeNumber.grabarz || 
+                cardType == (int)cardTypeNumber.panCzasu || 
+                cardType == (int)cardTypeNumber.jozinZBazin)
             {
                 cards[cardType].cards[cardNumber].inGame = false;
                 players[selectedPlayer].cardTypes.RemoveAt(removeCardCombobox.SelectedIndex);
