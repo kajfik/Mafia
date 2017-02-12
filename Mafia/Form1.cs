@@ -218,7 +218,6 @@ namespace Mafia
             public bool matrix;
             public bool grabarz;
             public int matrixBullets = 0;
-            public int numOfMafians;
             public int mafiansAim;
             public int mafiaShoots;
             public Bullet bullet = new Bullet();
@@ -318,7 +317,6 @@ namespace Mafia
         bool matrix = false;
         bool grabarz = false;
         int matrixBullets = 0;
-        int numOfMafians;
         int mafiansAim;
         //numOfPlayers - hasnt aimed, -1 -> bad aim, no shooting
         int mafiaShoots;
@@ -583,7 +581,6 @@ namespace Mafia
                         players[i].cardNumbers = new List<int>();
                         players[i].cardTypes = new List<int>();
                     }
-                    numOfMafians = amountOfSpecificCards[(int)cardTypeNumber.mafian];
                     nextMrakoszlap = amountOfSpecificCards[(int)cardTypeNumber.mrakoszlap];
                     nextZwierciadlo = amountOfSpecificCards[(int)cardTypeNumber.zwierciadlo];
                     nextImunita = amountOfSpecificCards[(int)cardTypeNumber.imunita];
@@ -1006,7 +1003,7 @@ namespace Mafia
 
         public void starter()
         {
-            while (numberOfAlivePlayers > numOfMafians && numOfMafians > 0)
+            while (numberOfAlivePlayers > cards[(int)cardTypeNumber.mafian].numInGame && cards[(int)cardTypeNumber.mafian].numInGame > 0)
             {
                 saveGameState();
                 if (starterThread == 0)
@@ -1016,7 +1013,6 @@ namespace Mafia
                     {
                         starterThread = tmp;
                     }
-                    
                 }
                 else
                 {
@@ -1026,8 +1022,6 @@ namespace Mafia
                         starterThread = tmp;
                     }
                 }
-                //if (undo) { firstNightPhase = state.firstNightPhase; }
-                
             }
             this.Invoke((MethodInvoker)delegate
             {
@@ -1043,16 +1037,15 @@ namespace Mafia
                 buttonStartNight.Visible = false;
                 undoButton.Enabled = false;
                 undoButton.Visible = false;
-                if (numOfMafians > 0)
+                if (cards[(int)cardTypeNumber.mafian].numInGame > 0)
                 {
                     InfoLabel.Text = "Mafia wygrała.";
-                    InfoLabel.Focus();
                 }
                 else
                 {
                     InfoLabel.Text = "Niewinni obywatele wygrali.";
-                    InfoLabel.Focus();
                 }
+                InfoLabel.Focus();
             });
         }
         
@@ -1573,7 +1566,7 @@ namespace Mafia
                                 {
                                     wakedPlayers.Add(player);
                                 }
-                                if (numOfMafians + 1 == numberOfAlivePlayers && (numOfNight + 2 + posunyciDoktora) % 3 != 0)
+                                if (cards[(int)cardTypeNumber.mafian].numInGame + 1 == numberOfAlivePlayers && (numOfNight + 2 + posunyciDoktora) % 3 != 0)
                                 {
                                     this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " nie bedzie ulyczóny, bo doktor je sóm proci mafianóm." + endl; InfoLabel.Focus(); });
                                 }
@@ -1665,7 +1658,7 @@ namespace Mafia
                                 mafiaShoots = -1;
                                 this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[player].name + ", kiery je mafianym, je tej nocy we więzieniu, także mafia nie wystrzeli." + endl; InfoLabel.Focus(); });
                             }
-                            if (mafiansAim == numOfMafians)
+                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
                             {
                                 if (mafiaShoots == -1)
                                 {
@@ -1721,7 +1714,7 @@ namespace Mafia
                                 mafiaShoots = -1;
                                 this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[player].name + ", kiery je mafianym, je tej nocy we więzieniu, także mafia nie wystrzeli." + endl; InfoLabel.Focus(); });
                             }
-                            if (mafiansAim == numOfMafians)
+                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
                             {
                                 if (mafiaShoots == -1)
                                 {
@@ -1777,7 +1770,7 @@ namespace Mafia
                                 mafiaShoots = -1;
                                 this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[player].name + ", kiery je mafianym, je tej nocy we więzieniu, także mafia nie wystrzeli." + endl; InfoLabel.Focus(); });
                             }
-                            if (mafiansAim == numOfMafians)
+                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
                             {
                                 if (mafiaShoots == -1)
                                 {
@@ -2590,7 +2583,7 @@ namespace Mafia
                                 {
                                     wakedPlayers.Add(player);
                                 }
-                                if (numOfMafians + 1 == numberOfAlivePlayers && (numOfNight + 2 + posunyciDoktora) % 3 != 0)
+                                if (cards[(int)cardTypeNumber.mafian].numInGame + 1 == numberOfAlivePlayers && (numOfNight + 2 + posunyciDoktora) % 3 != 0)
                                 {
                                     this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " nie bedzie ulyczóny, bo doktor je sóm proci mafianóm." + endl; InfoLabel.Focus(); });
                                 }
@@ -2682,7 +2675,7 @@ namespace Mafia
                                 mafiaShoots = -1;
                                 this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[player].name + ", kiery je mafianym, je tej nocy we więzieniu, także mafia nie wystrzeli." + endl; InfoLabel.Focus(); });
                             }
-                            if (mafiansAim == numOfMafians)
+                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
                             {
                                 if (mafiaShoots == -1)
                                 {
@@ -2738,7 +2731,7 @@ namespace Mafia
                                 mafiaShoots = -1;
                                 this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[player].name + ", kiery je mafianym, je tej nocy we więzieniu, także mafia nie wystrzeli." + endl; InfoLabel.Focus(); });
                             }
-                            if (mafiansAim == numOfMafians)
+                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
                             {
                                 if (mafiaShoots == -1)
                                 {
@@ -2794,7 +2787,7 @@ namespace Mafia
                                 mafiaShoots = -1;
                                 this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[player].name + ", kiery je mafianym, je tej nocy we więzieniu, także mafia nie wystrzeli." + endl; InfoLabel.Focus(); });
                             }
-                            if (mafiansAim == numOfMafians)
+                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
                             {
                                 if (mafiaShoots == -1)
                                 {
@@ -3275,7 +3268,6 @@ namespace Mafia
             state.numberOfAlivePlayers = numberOfAlivePlayers;
             state.numberOfTunnels = numberOfTunnels;
             state.numOfAllCards = numOfAllCards;
-            state.numOfMafians = numOfMafians;
             state.numOfNight = numOfNight;
             state.ofiara = ofiara;
             state.pijawicaMrakoszlaps = pijawicaMrakoszlaps;
@@ -3360,7 +3352,6 @@ namespace Mafia
             numberOfAlivePlayers = state.numberOfAlivePlayers;
             numberOfTunnels = state.numberOfTunnels;
             numOfAllCards = state.numOfAllCards;
-            numOfMafians = state.numOfMafians;
             numOfNight = state.numOfNight;
             ofiara = state.ofiara;
             pijawicaMrakoszlaps = state.pijawicaMrakoszlaps;
@@ -4364,10 +4355,6 @@ namespace Mafia
                 {
                     Info2RTB.Text += "Gracz " + players[player].name + " umrził." + endl; InfoLabel.Focus();
                 });
-                if (players[player].cardTypes.Contains((int)cardTypeNumber.mafian))
-                {
-                    numOfMafians--;
-                }
                 for (int i = 0; i < players[player].cardTypes.Count; i++)
                 {
                     cards[players[player].cardTypes[i]].numInGame--;
@@ -4631,7 +4618,7 @@ namespace Mafia
                             addCardButton.Enabled = true;
                             removeCardButton.Enabled = true;
                             undoButton.Enabled = true;
-                            if (numberOfAlivePlayers == numOfMafians || numOfMafians == 0)
+                            if (numberOfAlivePlayers == cards[(int)cardTypeNumber.mafian].numInGame || cards[(int)cardTypeNumber.mafian].numInGame == 0)
                             {
                                 waitForClickYesNo.Set();
                             }
