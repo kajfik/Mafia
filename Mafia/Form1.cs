@@ -70,45 +70,45 @@ namespace Mafia
          1  //jozinZBazin
         };
 
-        string[] cardNames = new string[numOfSpecificCards]
+        string[,] cardNames = new string[numOfSpecificCards, 2]
         {
-            "mrakoszlap",
-            "imunita",
-            "prowazochodec",
-            "kewlar",
-            "matrix",
-            "jailer",
-            "mag",
-            "slina",
-            "pijavica",
-            "piosek",
-            "kobra",
-            "magnet",
-            "fusekla",
-            "duch bobo",
-            "mafian",
-            "szileny strzelec",
-            "sniper",
-            "zwierciadlo",
-            "terorista",
-            "astronom",
-            "meciar",
-            "kovac",
-            "al capone",
-            "gandalf",
-            "kus kona",
-            "ateista",
-            "anarchista",
-            "szklorz",
-            "masowy zabijak",
-            "soudce",
-            "slepy kat",
-            "komunista",
-            "luneta",
-            "grabarz",
-            "pan czasu",
-            "doktor",
-            "jozin z bazin"
+            { "mrakoszlap", "mrákošlap"},
+            {"imunita", "imunita"},
+            {"prowazochodec", "provazochodec"},
+            {"kewlar", "kevlar"},
+            {"matrix", "matrix"},
+            {"jailer", "jailer"},
+            {"mag", "mag"},
+            {"slina", "slina"},
+            {"pijavica", "pijavice"},
+            {"piosek", "písek"},
+            {"kobra", "kobra"},
+            {"magnet", "magnet"},
+            {"fusekla", "ponožka"},
+            {"duch bobo", "duch bobo"},
+            {"mafian", "mafian"},
+            {"szileny strzelec", "šílený střelec"},
+            {"sniper", "sniper"},
+            {"zwierciadlo", "zrcadlo"},
+            {"terorista", "terorista"},
+            {"astronom", "astronom"},
+            {"meciar", "mečiar"},
+            {"kovac", "kováč"},
+            {"al capone", "al capone"},
+            {"gandalf", "gandalf"},
+            {"kus kona", "kus koňa"},
+            {"ateista", "ateista"},
+            {"anarchista", "anarchista"},
+            {"szklorz", "sklenář"},
+            {"masowy zabijak", "masový zabiják"},
+            {"soudce", "soudce"},
+            {"slepy kat", "slepý kat"},
+            {"komunista", "komunista"},
+            {"luneta", "luneta"},
+            {"grabarz", "hrobař"},
+            {"pan czasu", "pán času"},
+            {"doktor", "doktor"},
+            {"jozin z bazin", "jožin z bažin"}
         };
 
         /*
@@ -189,6 +189,8 @@ namespace Mafia
             //type: 0 - shoot, 1 - matrixShoot, 2 - toxic
             public int type;
             public int target;
+            public int targetLeft;
+            public int targetRight;
             public int from;
             public bool mafia;
             public int reportNumber;
@@ -318,9 +320,6 @@ namespace Mafia
         int clickedPlayer;
         bool wantsUse;
         bool canClickPictureBox = false;
-        const string wakes1 = "Budzi se ";
-        const string wakes2 = ", chce użyć swojóm funkcje?";
-        const string wakes3 = ".";
         bool matrix = false;
         bool grabarz = false;
         int matrixBullets = 0;
@@ -424,6 +423,44 @@ namespace Mafia
         */
         const int numberOfReports = 29;
         string[] report = new string[numberOfReports];
+        int lang;
+        const string sbvc = "sbvf";
+        readonly string[,] text =
+        {
+            /*  0 */{"Nazwa", "Jméno" },
+            /*  1 */{"-go gracza", "-ho hráče" },
+            /*  2 */{"Dla poprawnego rozdania kart musisz usunąć kilka kart. Karty usuwa się podwójnym przyciskiem myszki. Ilość kart, które jeszcze trzeba usunąć: ",
+                     "Pro správné rozdání karet je třeba některé karty odstranit. Karty se odstraňuje dvojklikem. Počet karet, které je třeba ještě odstranit: "
+                    },
+            /*  3 */{"Mafia wygrała.", "Vyhrála mafie." },
+            /*  4 */{"Niewinni obywatele wygrali.", "Vyhráli poctiví občané." },
+            /*  5 */{"Rozpocznij dzień", "Začni den" },
+            /*  6 */{"Zaczyno noc i miasteczko idzie spać...", "Začíná noc a městečko jde spát..." },
+            /*  7 */{"Gdo se nimo obudzić?", "Kdo se nemá probudit?" },
+            /*  8 */{"Gracz", "Hráč" },
+            /*  9 */{"se tej nocy nie obudzi.", "se této noci neprobudí." },
+            /* 10 */{"Budzi se ", "Budí se "},
+            /* 11 */{ ", chce użyć swojóm funkcje?", ", chce použít svoji schopnost?"},
+            /* 12 */{"Grabarz użył swojóm funkcje.", "Hrobař použil svoji schopnost." },
+            /* 13 */
+            /* 14 */
+            /* 15 */
+            /* 16 */
+            /* 17 */
+            /* 18 */
+            /* 19 */
+            /* 20 */
+            /* 21 */
+            /* 22 */
+            /* 23 */
+            /* 24 */
+            /* 25 */
+            /* 26 */
+            /* 27 */
+            /* 28 */
+            /* 29 */
+
+        };
         
         // functions for initializing stuff
 
@@ -472,6 +509,10 @@ namespace Mafia
                 removeCardCombobox.Visible = false;
                 undoButton.Enabled = false;
                 undoButton.Visible = false;
+                numOfPlayersNumericUpDown.Enabled = false;
+                numOfPlayersNumericUpDown.Visible = false;
+                labelStartPhase.Text = "Please select a language:";
+                comboBoxLanguage.SelectedIndex = 0;
                 this.AcceptButton = buttonStartPhase;
                 initializeCards();
                 numOfPlayersNumericUpDown.Focus();
@@ -483,7 +524,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -497,7 +538,7 @@ namespace Mafia
                     cards[i].cards = new List<Card>();
                     for(int j = 0; j < amountOfSpecificCards[i]; j++)
                     {
-                        cards[i].cards.Add(new Card(cardNames[i], -1, 1, true));
+                        cards[i].cards.Add(new Card(cardNames[i, lang], -1, 1, true));
                     }
                 }
                 
@@ -510,7 +551,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -518,9 +559,21 @@ namespace Mafia
         {
             try
             {
-                // setting num of players
-                if (startPhase == 0)
+                // setting language
+                if(startPhase == 0)
                 {
+                    lang = comboBoxLanguage.SelectedIndex;
+                    comboBoxLanguage.Visible = false;
+                    comboBoxLanguage.Enabled = false;
+                    numOfPlayersNumericUpDown.Enabled = true;
+                    numOfPlayersNumericUpDown.Visible = true;
+                    labelStartPhase.Text = "Ilość graczy:";
+                    startPhase = 1;
+                }
+                // setting num of players
+                else if (startPhase == 1)
+                {
+                    
                     numberOfPlayers = (int)numOfPlayersNumericUpDown.Value;
                     numberOfAlivePlayers = numberOfPlayers;
                     players = new Player[numberOfPlayers];
@@ -531,14 +584,14 @@ namespace Mafia
                     }
                     numOfPlayersNumericUpDown.Enabled = false;
                     numOfPlayersNumericUpDown.Visible = false;
-                    labelStartPhase.Text = "Nazwa " + (playersNamesSet + 1) + "-go gracza: ";
+                    labelStartPhase.Text = text[0, lang] + ' ' + (playersNamesSet + 1) + text[1, lang] + ": ";
                     textBoxPlayerName.Enabled = true;
                     textBoxPlayerName.Visible = true;
                     textBoxPlayerName.Focus();
-                    startPhase = 1;
+                    startPhase = 2;
                 }
                 // setting players names
-                else if (startPhase == 1)
+                else if (startPhase == 2)
                 {
                     if (textBoxPlayerName.Text != "")
                     {
@@ -546,19 +599,19 @@ namespace Mafia
                         playersNamesSet++;
                         textBoxPlayerName.Text = "";
                         textBoxPlayerName.Focus();
-                        labelStartPhase.Text = "Nazwa " + (playersNamesSet + 1) + "-go gracza: ";
+                        labelStartPhase.Text = text[0, lang] + ' ' + (playersNamesSet + 1) + text[1, lang] + ": ";
                         if (playersNamesSet == numberOfPlayers)
                         {
                             labelStartPhase.Text = "";
                             textBoxPlayerName.Enabled = false;
                             textBoxPlayerName.Visible = false;
-                            startPhase = 2;
+                            startPhase = 3;
                             buttonStartPhase.PerformClick();
                         }
                     }
                 }
                 // deleting cards
-                else if (startPhase == 2)
+                else if (startPhase == 3)
                 {
                     setNumberOfAllCards();
                     if (numOfAllCards % numberOfPlayers != 0)
@@ -570,16 +623,16 @@ namespace Mafia
                         drawCardsListBox();
                         labelStartPhase.MaximumSize = new Size(250, 0);
                         labelStartPhase.AutoSize = true;
-                        labelStartPhase.Text = "Dla poprawnego rozdania kart musisz usunąć kilka kart. Karty usuwa się podwójnym przyciskiem myszki. Ilość kart, które jeszcze trzeba usunąć: " + numOfAllCards % numberOfPlayers + ".";
+                        labelStartPhase.Text = text[2, lang] + numOfAllCards % numberOfPlayers + ".";
                     }
                     else
                     {
-                        startPhase = 3;
+                        startPhase = 4;
                         buttonStartPhase.PerformClick();
                     }
                 }
                 // initializing a couple of things and starting the game
-                else if (startPhase == 3)
+                else if (startPhase == 4)
                 {
                     for (int i = 0; i < numberOfPlayers; i++)
                     {
@@ -621,7 +674,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -637,7 +690,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -648,13 +701,13 @@ namespace Mafia
                 CardsListBox.Items.Clear();
                 for (int i = 0; i < numOfSpecificCards; i++)
                 {
-                    CardsListBox.Items.Add(cardNames[i] + " (" + amountOfSpecificCards[i] + ")");
+                    CardsListBox.Items.Add(cardNames[i, lang] + " (" + amountOfSpecificCards[i] + ")");
                 }
                 CardsListBox.Height = CardsListBox.PreferredHeight;
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -681,14 +734,14 @@ namespace Mafia
                     }
                     else
                     {
-                        labelStartPhase.Text = "Dla poprawnego rozdania kart musisz usunąć kilka kart. Karty usuwa się podwójnym przyciskiem myszki. Ilość kart, które jeszcze trzeba usunąć: " + numOfAllCards % numberOfPlayers + ".";
+                        labelStartPhase.Text = text[2, lang] + numOfAllCards % numberOfPlayers + ".";
                         drawCardsListBox();
                     }
                 }
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -933,7 +986,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -958,7 +1011,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -1000,7 +1053,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
         
@@ -1059,11 +1112,11 @@ namespace Mafia
                 undoButton.Visible = false;
                 if (cards[(int)cardTypeNumber.mafian].numInGame > 0)
                 {
-                    InfoLabel.Text = "Mafia wygrała.";
+                    InfoLabel.Text = text[3, lang];
                 }
                 else
                 {
-                    InfoLabel.Text = "Niewinni obywatele wygrali.";
+                    InfoLabel.Text = text[4, lang];
                 }
                 InfoLabel.Focus();
             });
@@ -1139,14 +1192,14 @@ namespace Mafia
                     drawPlayers();
                     yesButton.Enabled = false;
                     noButton.Enabled = false;
-                    shotButton.Text = "Rozpocznij dzień";
-                    InfoRTB.Text = raport + "Zaczyno noc i miasteczko idzie spać..." + endl;
+                    shotButton.Text = text[5, lang];
+                    InfoRTB.Text = raport + text[6, lang] + endl;
                     InfoLabel.Focus();
                 });
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -1183,17 +1236,17 @@ namespace Mafia
                             {
                                 wakedPlayers.Add(player);
                             }
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 25; return 0; }
                             if (undo) { return 2; }
                             if (wantsUse)
                             {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Gdo se nimo obudzić?"; });
+                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[7, lang]; });
                                 clickPlayer(player, "", true, cardType);
                                 if (undo) { return 2; }
                                 players[clickedPlayer].wake = false;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " se tej nocy nie obudzi." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[lang, 8] + ' ' + players[clickedPlayer].name + ' ' + text[lang, 9] + endl; InfoLabel.Focus(); });
                                 cards[cardType].cards[cardNumber].uses--;
                             }
                             
@@ -1210,7 +1263,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 25; return 0; }
                             if (undo) { return 2; }
@@ -1223,7 +1276,7 @@ namespace Mafia
                                 if (wantsUse)
                                 {
                                     grabarz = true;
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Grabarz użył swojóm funkcje." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[12, lang] + endl; InfoLabel.Focus(); });
                                     cards[cardType].cards[cardNumber].uses--;
                                 }
                             }
@@ -1241,7 +1294,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 25; return 0; }
                             if (undo) { return 2; }
@@ -1254,7 +1307,7 @@ namespace Mafia
                                 if (wantsUse)
                                 {
                                     matrix = true;
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Následuj bílého králíka." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Následuj bílého králíka." + endl; InfoLabel.Focus(); });
                                     cards[cardType].cards[cardNumber].uses--;
                                 }
                             }
@@ -1272,7 +1325,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Z kierego gracza zrobić tunel?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1304,7 +1357,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Z kierego gracza zrobić tunel?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1336,7 +1389,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Z kierego gracza zrobić tunel?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1368,7 +1421,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza poślinić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1381,7 +1434,7 @@ namespace Mafia
                                 }
                                 players[clickedPlayer].hasSlina = true;
                                 report[2] = "Poślinióny był " + players[clickedPlayer].name + ". ";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Poślinióny był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Poślinióny był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             
                         }
@@ -1397,7 +1450,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza poślinić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1410,7 +1463,7 @@ namespace Mafia
                                 }
                                 players[clickedPlayer].hasSlina = true;
                                 report[2] += "Poślinióny był " + players[clickedPlayer].name + ".";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Poślinióny był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Poślinióny był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             
                         }
@@ -1426,7 +1479,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Na kierego gracza se przissać?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1438,7 +1491,7 @@ namespace Mafia
                                     wakedPlayers.Add(player);
                                 }
                                 players[clickedPlayer].hasPijavica = true;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Pijavica se przissała na gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Pijavica se przissała na gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             
                         }
@@ -1454,7 +1507,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza posypać pioskym?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1467,13 +1520,13 @@ namespace Mafia
                                 }
                                 if (cards[(int)cardTypeNumber.mag].cards[1].player == clickedPlayer || cards[(int)cardTypeNumber.szilenyStrzelec].cards[1].player == clickedPlayer || cards[(int)cardTypeNumber.alCapone].cards[0].player == clickedPlayer)
                                 {
-                                    this.Invoke((MethodInvoker)delegate { report[3] = "Gracza posypanego pioskym ochróniła gas maska."; Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " nimoże być posypany pioskym, bo mo gas maske." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { report[3] = "Gracza posypanego pioskym ochróniła gas maska."; Info2RTB.Text += ">>> " + "" + text[lang, 8] + ' ' + players[clickedPlayer].name + " nimoże być posypany pioskym, bo mo gas maske." + endl; InfoLabel.Focus(); });
                                 }
                                 else
                                 {
                                     players[clickedPlayer].hasPiosek = true;
                                     report[3] = "Pioskym dostoł " + players[clickedPlayer].name + ".";
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Pioskym dostoł " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Pioskym dostoł " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                                 }
                             }
                             
@@ -1490,7 +1543,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza ugryzie kobra?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1502,7 +1555,7 @@ namespace Mafia
                                     wakedPlayers.Add(player);
                                 }
                                 players[clickedPlayer].hasKobra = true;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Ugryziony był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Ugryziony był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             
                         }
@@ -1518,7 +1571,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza zmagnetyzować?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1530,7 +1583,7 @@ namespace Mafia
                                     wakedPlayers.Add(player);
                                 }
                                 players[clickedPlayer].hasMagnet = true;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Zmagnetyzowany był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Zmagnetyzowany był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             
                         }
@@ -1546,7 +1599,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && (players[player].alive || (!players[player].alive && !duchBoboExhibowolPoUmrziciu)))
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza exhibnóć?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1559,7 +1612,7 @@ namespace Mafia
                                 }
                                 players[clickedPlayer].hasExhib = true;
                                 report[1] = "Zakozane mówić mo " + players[clickedPlayer].name + ". ";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Exhibnóty był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Exhibnóty był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             if (!duchBoboExhibowolPoUmrziciu && !players[player].alive)
                             {
@@ -1579,7 +1632,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             if ((numOfNight + 2 + posunyciDoktora) % 3 == 0)
                             {
                                 this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza ulyczyć? (może sóm siebie)"; });
@@ -1599,11 +1652,11 @@ namespace Mafia
                                 }
                                 if (cards[(int)cardTypeNumber.mafian].numInGame + 1 == numberOfAlivePlayers && (numOfNight + 2 + posunyciDoktora) % 3 != 0)
                                 {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " nie bedzie ulyczóny, bo doktor je sóm proci mafianóm." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "" + text[lang, 8] + ' ' + players[clickedPlayer].name + " nie bedzie ulyczóny, bo doktor je sóm proci mafianóm." + endl; InfoLabel.Focus(); });
                                 }
                                 else
                                 {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " bedzie ulyczóny." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "" + text[lang, 8] + ' ' + players[clickedPlayer].name + " bedzie ulyczóny." + endl; InfoLabel.Focus(); });
                                     players[clickedPlayer].hasDoktor = true;
                                 }
                             }
@@ -1621,7 +1674,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 25; return 0; }
                             if (undo) { return 2; }
@@ -1630,7 +1683,7 @@ namespace Mafia
                                 this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Na kierego gracza chynyć błoto?"; });
                                 clickPlayer(player, name, false, cardType);
                                 if (undo) { return 2; }
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " był pochlapany błotym." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "" + text[lang, 8] + ' ' + players[clickedPlayer].name + " był pochlapany błotym." + endl; InfoLabel.Focus(); });
                                 cards[cardType].cards[cardNumber].uses--;
                                 players[clickedPlayer].numberOfBloto++;
 
@@ -1662,7 +1715,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza zamierzić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1682,7 +1735,7 @@ namespace Mafia
                                     mafiaShoots = -1;
                                 }
                                 mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Mafian 1 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Mafian 1 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             else
                             {
@@ -1700,7 +1753,7 @@ namespace Mafia
                                     Shot shot = new Shot();
                                     shot.type = 0;
                                     shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> Mafian 1 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                    shot.textInfo2RTB = ">>> " + "Mafian 1 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                     shots.Add(shot);
                                 }
                             }
@@ -1718,7 +1771,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza zamierzić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1738,7 +1791,7 @@ namespace Mafia
                                     mafiaShoots = -1;
                                 }
                                 mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Mafian 2 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Mafian 2 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             else
                             {
@@ -1756,7 +1809,7 @@ namespace Mafia
                                     Shot shot = new Shot();
                                     shot.type = 0;
                                     shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> Mafian 2 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                    shot.textInfo2RTB = ">>> " + "Mafian 2 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                     shots.Add(shot);
                                 }
                             }
@@ -1774,7 +1827,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza zamierzić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1794,7 +1847,7 @@ namespace Mafia
                                     mafiaShoots = -1;
                                 }
                                 mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Mafian 3 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Mafian 3 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             else
                             {
@@ -1812,7 +1865,7 @@ namespace Mafia
                                     Shot shot = new Shot();
                                     shot.type = 0;
                                     shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> Mafian 3 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                    shot.textInfo2RTB = ">>> " + "Mafian 3 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                     shots.Add(shot);
                                 }
                             }
@@ -1830,7 +1883,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Na kierego gracza wystrzelić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1844,7 +1897,7 @@ namespace Mafia
                                 Shot shot = new Shot();
                                 shot.type = 0;
                                 shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 5; shot.first = true; shot.sniper = false;
-                                shot.textInfo2RTB = ">>> Strzelec 1 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                shot.textInfo2RTB = ">>> " + "Strzelec 1 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                 shots.Add(shot);
                             }
                             
@@ -1861,7 +1914,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Na kierego gracza wystrzelić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1875,7 +1928,7 @@ namespace Mafia
                                 Shot shot = new Shot();
                                 shot.type = 0;
                                 shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 6; shot.first = true; shot.sniper = false;
-                                shot.textInfo2RTB = ">>> Strzelec 2 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                shot.textInfo2RTB = ">>> " + "Strzelec 2 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                 shots.Add(shot);
                             }
                             
@@ -1893,7 +1946,7 @@ namespace Mafia
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
                             resetBullet();
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 25; return 0; }
                             if (undo) { return 2; }
@@ -1908,7 +1961,7 @@ namespace Mafia
                                     Shot shot = new Shot();
                                     shot.type = 0;
                                     shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 7; shot.first = true; shot.sniper = true;
-                                    shot.textInfo2RTB = ">>> Sniper " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                    shot.textInfo2RTB = ">>> " + "Sniper " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                     shots.Add(shot);
                                 }
                             }
@@ -1931,7 +1984,7 @@ namespace Mafia
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
                             resetBullet();
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 25; return 0; }
                             if (undo) { return 2; }
@@ -1945,8 +1998,9 @@ namespace Mafia
                                 {
                                     Shot shot = new Shot();
                                     shot.type = 2;
-                                    shot.from = player;
-                                    shot.textInfo2RTB = ">>> Fusekla zaśmierdziała." + endl;
+                                    shot.targetRight = rightPlayer(player);
+                                    shot.targetLeft = leftPlayer(player);
+                                    shot.textInfo2RTB = ">>> " + "Fusekla zaśmierdziała." + endl;
                                     shots.Add(shot);
                                     cards[cardType].cards[cardNumber].uses--;
                                 }
@@ -1965,7 +2019,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kiery gracz bedzie mieć zakaz głosowanio?"; });
                             clickPlayer(player, name, false, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -1976,7 +2030,7 @@ namespace Mafia
                                 {
                                     wakedPlayers.Add(player);
                                 }
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " bedzie mieć zakaz głosowanio." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "" + text[lang, 8] + ' ' + players[clickedPlayer].name + " bedzie mieć zakaz głosowanio." + endl; InfoLabel.Focus(); });
                                 report[28] = "Zakozane głosować mo " + players[clickedPlayer].name + ". ";
                                 players[clickedPlayer].hasZakazGlosowanio = true;
                             }
@@ -1994,7 +2048,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 25; return 0; }
                             if (undo) { return 2; }
@@ -2010,7 +2064,7 @@ namespace Mafia
                                 ofiara = clickedPlayer;
                                 if (players[player].wake)
                                 {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[zachroniony].name + " bedzie zachrónióny przed szibenicóm a zamiast niego na ni skóńczy " + players[ofiara].name + "." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Gracz " + players[zachroniony].name + " bedzie zachrónióny przed szibenicóm a zamiast niego na ni skóńczy " + players[ofiara].name + "." + endl; InfoLabel.Focus(); });
                                     cards[cardType].cards[cardNumber].uses--;
                                     players[zachroniony].zachronionyKatym = true;
                                     players[ofiara].ofiaraKata = true;
@@ -2037,10 +2091,10 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if ((numOfNight + 1) % 3 == 0 && cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             if (players[player].wake)
                             {
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Informacja do lunety:" + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Informacja do lunety:" + endl; InfoLabel.Focus(); });
                                 int zmiana1, zmiana2, pomoc;
                                 int iloscGraczowKierziSeObudzili = wakedPlayers.Count;
                                 for (int i = 0; i < 50000; i++)
@@ -2073,9 +2127,8 @@ namespace Mafia
                     //strzilani + koniec nocy
                     else if (nightPhase == 25)
                     {
-                        
+                        // normal shots
                         List<Shot> shotsToRemove = new List<Shot>();
-                        //strilani wszystkich normalnych kulek
                         foreach (Shot shot in shots)
                         {
                             if (shot.type == 0)
@@ -2103,6 +2156,7 @@ namespace Mafia
                             shots.Remove(shot);
                         }
                         shotsToRemove.Clear();
+                        // matrix shots initializing
                         if (matrix)
                         {
                             int cardType = (int)cardTypeNumber.matrix;
@@ -2113,7 +2167,7 @@ namespace Mafia
                             report[8] = "W tej nocy matrix użył swojóm funkcje. Ilość pocisków, kiere przechwycił: " + matrixBullets + ".";
                             if (matrixBullets > 0)
                             {
-                                this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             }
                             for (int i = 0; i < matrixBullets; i++)
                             {
@@ -2124,7 +2178,7 @@ namespace Mafia
                                 Shot shot = new Shot();
                                 shot.type = 1;
                                 shot.target = clickedPlayer; shot.from = player; shot.bulletNumber = i;
-                                shot.textInfo2RTB = ">>> Matrix " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                shot.textInfo2RTB = ">>> " + "Matrix " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                 shots.Add(shot);
                                 if (matrixBullets - i - 1 > 0)
                                 {
@@ -2153,11 +2207,11 @@ namespace Mafia
                             }
                             else if (shot.type == 2)
                             {
-                                toxic(shot.from);
+                                toxic(shot.targetRight, shot.targetLeft);
                             }
                         }
                         shots.Clear();
-
+                        // kuskona
                         int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
                         if(players[playerWithKuskona].alive && kuskonaZyskolMraka)
                         {
@@ -2168,10 +2222,11 @@ namespace Mafia
                             report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                             players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                             players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKuskona, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKuskona, 1, true));
                             cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                             nextMrakoszlap++;
                         }
+                        // gandalf
                         int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
                         if (players[playerWithGandalf].alive && gandalfZyskolMraka)
                         {
@@ -2182,10 +2237,11 @@ namespace Mafia
                             report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                             players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                             players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGandalf, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGandalf, 1, true));
                             cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                             nextMrakoszlap++;
                         }
+                        // pijawica
                         int playerWithPijavica = cards[(int)cardTypeNumber.pijavica].cards[0].player;
                         if (players[playerWithPijavica].alive)
                         {
@@ -2198,11 +2254,12 @@ namespace Mafia
                                 report[22] += "Pijawica zyskała mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                                 players[playerWithPijavica].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                 players[playerWithPijavica].cardNumbers.Add(nextMrakoszlap);
-                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithPijavica, 1, true));
+                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithPijavica, 1, true));
                                 cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                 nextMrakoszlap++;
                             }
                         }
+                        // kobra
                         int playerWithKobra = cards[(int)cardTypeNumber.kobra].cards[0].player;
                         if (players[playerWithKobra].alive)
                         {
@@ -2215,13 +2272,14 @@ namespace Mafia
                                 report[23] = "Kobra zyskała mrakoszlapa " + (nextMrakoszlap + 1) + " a zniszczyła pijawice.";
                                 players[playerWithKobra].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                 players[playerWithKobra].cardNumbers.Add(nextMrakoszlap);
-                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKobra, 1, true));
+                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKobra, 1, true));
                                 cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                 nextMrakoszlap++;
                                 cards[(int)cardTypeNumber.pijavica].cards[0].uses--;
                                 cards[(int)cardTypeNumber.kobra].cards[0].uses--;
                             }
                         }
+                        // grabarz
                         int playerWithGrabarz = cards[(int)cardTypeNumber.grabarz].cards[0].player;
                         if (players[playerWithGrabarz].alive)
                         {
@@ -2236,12 +2294,13 @@ namespace Mafia
                                     report[24] += "Grabarz zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                                     players[playerWithGrabarz].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                     players[playerWithGrabarz].cardNumbers.Add(nextMrakoszlap);
-                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGrabarz, 1, true));
+                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGrabarz, 1, true));
                                     cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                     nextMrakoszlap++;
                                 }
                             }
                         }
+                        // sklenar
                         int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
                         if (players[playerWithSklenar].alive)
                         {
@@ -2254,11 +2313,12 @@ namespace Mafia
                                 report[25] = "Szklorz zrobił zwierciadło " + (nextZwierciadlo + 1) + ".";
                                 players[playerWithSklenar].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
                                 players[playerWithSklenar].cardNumbers.Add(nextZwierciadlo);
-                                cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo], playerWithSklenar, 1, true));
+                                cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo, lang], playerWithSklenar, 1, true));
                                 cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
                                 nextZwierciadlo++;
                             }
                         }
+
                         drawPlayersCardsRTB();
                         this.Invoke((MethodInvoker)delegate
                         {
@@ -2321,7 +2381,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 20; return 0; }
                             if (undo) { return 2; }
@@ -2334,7 +2394,7 @@ namespace Mafia
                                 if (wantsUse)
                                 {
                                     grabarz = true;
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Grabarz użył swojóm funkcje." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[12, lang] + endl; InfoLabel.Focus(); });
                                     cards[cardType].cards[cardNumber].uses--;
                                 }
                             }
@@ -2352,7 +2412,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 20; return 0; }
                             if (undo) { return 2; }
@@ -2365,7 +2425,7 @@ namespace Mafia
                                 if (wantsUse)
                                 {
                                     matrix = true;
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Následuj bílého králíka." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Následuj bílého králíka." + endl; InfoLabel.Focus(); });
                                     cards[cardType].cards[cardNumber].uses--;
                                 }
                             }
@@ -2387,7 +2447,7 @@ namespace Mafia
                             {
                                 wakedPlayers.Add(player);
                             }
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Z kierego gracza zrobić tunel?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2419,7 +2479,7 @@ namespace Mafia
                             {
                                 wakedPlayers.Add(player);
                             }
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Z kierego gracza zrobić tunel?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2451,7 +2511,7 @@ namespace Mafia
                             {
                                 wakedPlayers.Add(player);
                             }
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Z kierego gracza zrobić tunel?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2479,7 +2539,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza poślinić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2492,7 +2552,7 @@ namespace Mafia
                                 }
                                 players[clickedPlayer].hasSlina = true;
                                 report[2] = "Poślinióny był " + players[clickedPlayer].name + ". ";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Poślinióny był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Poślinióny był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             
                         }
@@ -2508,7 +2568,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza poślinić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2521,7 +2581,7 @@ namespace Mafia
                                 }
                                 players[clickedPlayer].hasSlina = true;
                                 report[2] += "Poślinióny był " + players[clickedPlayer].name + ".";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Poślinióny był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Poślinióny był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             
                         }
@@ -2537,7 +2597,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Na kierego gracza se przissać?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2549,7 +2609,7 @@ namespace Mafia
                                     wakedPlayers.Add(player);
                                 }
                                 players[clickedPlayer].hasPijavica = true;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Pijavica se przissała na gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Pijavica se przissała na gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             
                         }
@@ -2565,7 +2625,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza posypać pioskym?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2578,13 +2638,13 @@ namespace Mafia
                                 }
                                 if (cards[(int)cardTypeNumber.mag].cards[1].player == clickedPlayer || cards[(int)cardTypeNumber.szilenyStrzelec].cards[1].player == clickedPlayer || cards[(int)cardTypeNumber.alCapone].cards[0].player == clickedPlayer)
                                 {
-                                    this.Invoke((MethodInvoker)delegate { report[3] = "Gracza posypanego pioskym ochróniła gas maska."; Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " nimoże być posypany pioskym, bo mo gas maske." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { report[3] = "Gracza posypanego pioskym ochróniła gas maska."; Info2RTB.Text += ">>> " + "" + text[lang, 8] + ' ' + players[clickedPlayer].name + " nimoże być posypany pioskym, bo mo gas maske." + endl; InfoLabel.Focus(); });
                                 }
                                 else
                                 {
                                     players[clickedPlayer].hasPiosek = true;
                                     report[3] = "Pioskym dostoł " + players[clickedPlayer].name + ".";
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Pioskym dostoł " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Pioskym dostoł " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                                 }
                             }
                             
@@ -2601,7 +2661,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && !players[player].alive && !duchBoboExhibowolPoUmrziciu)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza exhibnóć?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 25; return 0; }
@@ -2612,7 +2672,7 @@ namespace Mafia
                             }
                             players[clickedPlayer].hasExhib = true;
                             report[1] = "Zakozane mówić mo " + players[clickedPlayer].name + ". ";
-                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Exhibnóty był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Exhibnóty był " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             duchBoboExhibowolPoUmrziciu = true;
                             
                         }
@@ -2628,7 +2688,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             if ((numOfNight + 2 + posunyciDoktora) % 3 == 0)
                             {
                                 this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza ulyczyć? (może sóm siebie)"; });
@@ -2648,11 +2708,11 @@ namespace Mafia
                                 }
                                 if (cards[(int)cardTypeNumber.mafian].numInGame + 1 == numberOfAlivePlayers && (numOfNight + 2 + posunyciDoktora) % 3 != 0)
                                 {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " nie bedzie ulyczóny, bo doktor je sóm proci mafianóm." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "" + text[lang, 8] + ' ' + players[clickedPlayer].name + " nie bedzie ulyczóny, bo doktor je sóm proci mafianóm." + endl; InfoLabel.Focus(); });
                                 }
                                 else
                                 {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " bedzie ulyczóny." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "" + text[lang, 8] + ' ' + players[clickedPlayer].name + " bedzie ulyczóny." + endl; InfoLabel.Focus(); });
                                     players[clickedPlayer].hasDoktor = true;
                                 }
                             }
@@ -2670,7 +2730,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 20; return 0; }
                             if (undo) { return 2; }
@@ -2679,7 +2739,7 @@ namespace Mafia
                                 this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Na kierego gracza chynyć błoto?"; });
                                 clickPlayer(player, name, false, cardType);
                                 if (undo) { return 2; }
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[clickedPlayer].name + " był pochlapany błotym." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "" + text[lang, 8] + ' ' + players[clickedPlayer].name + " był pochlapany błotym." + endl; InfoLabel.Focus(); });
                                 cards[cardType].cards[cardNumber].uses--;
                                 players[clickedPlayer].numberOfBloto++;
 
@@ -2711,7 +2771,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza zamierzić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2731,7 +2791,7 @@ namespace Mafia
                                     mafiaShoots = -1;
                                 }
                                 mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Mafian 1 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Mafian 1 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             else
                             {
@@ -2749,7 +2809,7 @@ namespace Mafia
                                     Shot shot = new Shot();
                                     shot.type = 0;
                                     shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> Mafian 1 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                    shot.textInfo2RTB = ">>> " + "Mafian 1 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                     shots.Add(shot);
                                 }
                             }
@@ -2767,7 +2827,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza zamierzić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2787,7 +2847,7 @@ namespace Mafia
                                     mafiaShoots = -1;
                                 }
                                 mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Mafian 2 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Mafian 2 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             else
                             {
@@ -2805,7 +2865,7 @@ namespace Mafia
                                     Shot shot = new Shot();
                                     shot.type = 0;
                                     shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> Mafian 2 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                    shot.textInfo2RTB = ">>> " + "Mafian 2 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                     shots.Add(shot);
                                 }
                             }
@@ -2823,7 +2883,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "Kierego gracza zamierzić?"; });
                             clickPlayer(player, name, true, cardType);
                             if (endNight) { nightPhase = 20; return 0; }
@@ -2843,7 +2903,7 @@ namespace Mafia
                                     mafiaShoots = -1;
                                 }
                                 mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Mafian 3 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Mafian 3 " + players[player].name + " zamierził gracza " + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                             else
                             {
@@ -2861,7 +2921,7 @@ namespace Mafia
                                     Shot shot = new Shot();
                                     shot.type = 0;
                                     shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> Mafian 3 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                    shot.textInfo2RTB = ">>> " + "Mafian 3 " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                     shots.Add(shot);
                                 }
                             }
@@ -2880,7 +2940,7 @@ namespace Mafia
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
                             resetBullet();
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 20; return 0; }
                             if (undo) { return 2; }
@@ -2895,7 +2955,7 @@ namespace Mafia
                                     Shot shot = new Shot();
                                     shot.type = 0;
                                     shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 7; shot.first = true; shot.sniper = true;
-                                    shot.textInfo2RTB = ">>> Sniper " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                    shot.textInfo2RTB = ">>> " + "Sniper " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                     shots.Add(shot);
                                 }
                             }
@@ -2918,7 +2978,7 @@ namespace Mafia
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
                             resetBullet();
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 20; return 0; }
                             if (undo) { return 2; }
@@ -2932,8 +2992,9 @@ namespace Mafia
                                 {
                                     Shot shot = new Shot();
                                     shot.type = 2;
-                                    shot.from = player;
-                                    shot.textInfo2RTB = ">>> Fusekla zaśmierdziała." + endl;
+                                    shot.targetRight = rightPlayer(player);
+                                    shot.targetLeft = leftPlayer(player);
+                                    shot.textInfo2RTB = ">>> " + "Fusekla zaśmierdziała." + endl;
                                     shots.Add(shot);
                                     cards[cardType].cards[cardNumber].uses--;
                                 }
@@ -2952,7 +3013,7 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes2 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
                             wants(player, name);
                             if (endNight) { nightPhase = 20; return 0; }
                             if (undo) { return 2; }
@@ -2968,7 +3029,7 @@ namespace Mafia
                                 ofiara = clickedPlayer;
                                 if (players[player].wake)
                                 {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Gracz " + players[zachroniony].name + " bedzie zachrónióny przed szibenicóm a zamiast niego na ni skóńczy " + players[ofiara].name + "." + endl; InfoLabel.Focus(); });
+                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Gracz " + players[zachroniony].name + " bedzie zachrónióny przed szibenicóm a zamiast niego na ni skóńczy " + players[ofiara].name + "." + endl; InfoLabel.Focus(); });
                                     cards[cardType].cards[cardNumber].uses--;
                                     players[zachroniony].zachronionyKatym = true;
                                     players[ofiara].ofiaraKata = true;
@@ -2995,10 +3056,10 @@ namespace Mafia
                         int player = cards[cardType].cards[cardNumber].player;
                         if ((numOfNight + 1) % 3 == 0 && cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             if (players[player].wake)
                             {
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Informacja do lunety:" + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Informacja do lunety:" + endl; InfoLabel.Focus(); });
                                 int zmiana1, zmiana2, pomoc;
                                 int iloscGraczowKierziSeObudzili = wakedPlayers.Count;
                                 for (int i = 0; i < 50000; i++)
@@ -3031,7 +3092,7 @@ namespace Mafia
                     //strzilani + koniec nocy
                     else if (nightPhase == 20)
                     {
-                        
+                        // normal shots
                         List<Shot> shotsToRemove = new List<Shot>();
                         foreach (Shot shot in shots)
                         {
@@ -3059,6 +3120,7 @@ namespace Mafia
                             shots.Remove(shot);
                         }
                         shotsToRemove.Clear();
+                        // matrix shots initializing
                         if (matrix)
                         {
                             int cardType = (int)cardTypeNumber.matrix;
@@ -3069,7 +3131,7 @@ namespace Mafia
                             report[8] = "W tej nocy matrix użył swojóm funkcje. Ilość pocisków, kiere przechwycił: " + matrixBullets + ".";
                             if (matrixBullets > 0)
                             {
-                                this.Invoke((MethodInvoker)delegate { InfoRTB.Text += wakes1 + name + wakes3 + endl; InfoLabel.Focus(); });
+                                this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
                             }
                             for (int i = 0; i < matrixBullets; i++)
                             {
@@ -3080,7 +3142,7 @@ namespace Mafia
                                 Shot shot = new Shot();
                                 shot.type = 1;
                                 shot.target = clickedPlayer; shot.from = player; shot.bulletNumber = i;
-                                shot.textInfo2RTB = ">>> Matrix " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
+                                shot.textInfo2RTB = ">>> " + "Matrix " + players[player].name + " wystrzelił na gracza " + players[clickedPlayer].name + "." + endl;
                                 shots.Add(shot);
                                 if (matrixBullets - i - 1 > 0)
                                 {
@@ -3089,6 +3151,7 @@ namespace Mafia
                             }
                             matrix = false;
                         }
+                        // matrix shots and fusekla
                         foreach (Shot shot in shots)
                         {
                             this.Invoke((MethodInvoker)delegate
@@ -3109,11 +3172,11 @@ namespace Mafia
                             }
                             else if (shot.type == 2)
                             {
-                                toxic(shot.from);
+                                toxic(shot.targetRight, shot.targetLeft);
                             }
                         }
                         shots.Clear();
-
+                        // kuskona
                         int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
                         if (players[playerWithKuskona].alive && kuskonaZyskolMraka)
                         {
@@ -3124,10 +3187,11 @@ namespace Mafia
                             report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                             players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                             players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKuskona, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKuskona, 1, true));
                             cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                             nextMrakoszlap++;
                         }
+                        // gandalf
                         int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
                         if (players[playerWithGandalf].alive && gandalfZyskolMraka)
                         {
@@ -3138,10 +3202,11 @@ namespace Mafia
                             report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                             players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                             players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGandalf, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGandalf, 1, true));
                             cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                             nextMrakoszlap++;
                         }
+                        // pijawica
                         int playerWithPijavica = cards[(int)cardTypeNumber.pijavica].cards[0].player;
                         if (players[playerWithPijavica].alive)
                         {
@@ -3154,11 +3219,12 @@ namespace Mafia
                                 report[22] += "Pijawica zyskała mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                                 players[playerWithPijavica].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                 players[playerWithPijavica].cardNumbers.Add(nextMrakoszlap);
-                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithPijavica, 1, true));
+                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithPijavica, 1, true));
                                 cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                 nextMrakoszlap++;
                             }
                         }
+                        // kobra
                         int playerWithKobra = cards[(int)cardTypeNumber.kobra].cards[0].player;
                         if (players[playerWithKobra].alive)
                         {
@@ -3171,13 +3237,14 @@ namespace Mafia
                                 report[23] = "Kobra zyskała mrakoszlapa " + (nextMrakoszlap + 1) + " a zniszczyła pijawice.";
                                 players[playerWithKobra].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                 players[playerWithKobra].cardNumbers.Add(nextMrakoszlap);
-                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKobra, 1, true));
+                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKobra, 1, true));
                                 cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                 nextMrakoszlap++;
                                 cards[(int)cardTypeNumber.pijavica].cards[0].uses--;
                                 cards[(int)cardTypeNumber.kobra].cards[0].uses--;
                             }
                         }
+                        // grabarz
                         int playerWithGrabarz = cards[(int)cardTypeNumber.grabarz].cards[0].player;
                         if (players[playerWithGrabarz].alive)
                         {
@@ -3192,12 +3259,13 @@ namespace Mafia
                                     report[24] += "Grabarz zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                                     players[playerWithGrabarz].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                     players[playerWithGrabarz].cardNumbers.Add(nextMrakoszlap);
-                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGrabarz, 1, true));
+                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGrabarz, 1, true));
                                     cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                     nextMrakoszlap++;
                                 }
                             }
                         }
+                        // sklenar
                         int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
                         if (players[playerWithSklenar].alive)
                         {
@@ -3210,11 +3278,12 @@ namespace Mafia
                                 report[25] = "Szklorz zrobił zwierciadło " + (nextZwierciadlo + 1) + ".";
                                 players[playerWithSklenar].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
                                 players[playerWithSklenar].cardNumbers.Add(nextZwierciadlo);
-                                cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo], playerWithSklenar, 1, true));
+                                cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo, lang], playerWithSklenar, 1, true));
                                 cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
                                 nextZwierciadlo++;
                             }
                         }
+
                         drawPlayersCardsRTB();
                         this.Invoke((MethodInvoker)delegate
                         {
@@ -3242,7 +3311,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
                 nightPhase++;
             }
             return 0;
@@ -3314,7 +3383,7 @@ namespace Mafia
                         report[27] += "Kuskona zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                         players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                         players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                        cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithKuskona, 1, true));
+                        cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKuskona, 1, true));
                         cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                         nextMrakoszlap++;
                     }
@@ -3328,7 +3397,7 @@ namespace Mafia
                         report[26] += "Gandalf zyskoł mrakoszlapa " + (nextMrakoszlap + 1) + ". ";
                         players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                         players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                        cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], playerWithGandalf, 1, true));
+                        cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGandalf, 1, true));
                         cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                         nextMrakoszlap++;
                     }
@@ -3352,7 +3421,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
                 day();
             }
             return 0;
@@ -3993,42 +4062,14 @@ namespace Mafia
             this.Invoke((MethodInvoker)delegate { drawPlayers(); });
         }
 
-        public void toxic(int from)
+        public void toxic(int rightPlayer, int leftPlayer)
         {
             try
             {
-                //initializing
                 report[21] = "W tej nocy fusekla użyła swojóm funkcje. ";
-                int leftPlayer = -1; int rightPlayer = -1;
-                int p = from;
-                for (int i = 0; i < numberOfPlayers && rightPlayer == -1; i++)
-                {
-                    p++;
-                    if (p == numberOfPlayers)
-                    {
-                        p = 0;
-                    }
-                    if (players[p].alive && p != from)
-                    {
-                        rightPlayer = p;
-                    }
-                }
-                p = from;
-                for (int i = 0; i < numberOfPlayers && leftPlayer == -1; i++)
-                {
-                    p--;
-                    if (p < 0)
-                    {
-                        p = numberOfPlayers - 1;
-                    }
-                    if (players[p].alive && p != from)
-                    {
-                        leftPlayer = p;
-                    }
 
-                }
                 //gracz po lewej
-                if (cards[(int)cardTypeNumber.mag].cards[1].player == leftPlayer || cards[(int)cardTypeNumber.szilenyStrzelec].cards[1].player == leftPlayer || cards[(int)cardTypeNumber.alCapone].cards[0].player == leftPlayer)
+                if (leftPlayer != -1 && players[leftPlayer].alive && ((cards[(int)cardTypeNumber.mag].numInGame >= 2 && cards[(int)cardTypeNumber.mag].cards[1].player == leftPlayer) || (cards[(int)cardTypeNumber.szilenyStrzelec].numInGame >= 2 && cards[(int)cardTypeNumber.szilenyStrzelec].cards[1].player == leftPlayer) || (cards[(int)cardTypeNumber.alCapone].numInGame >= 1 && cards[(int)cardTypeNumber.alCapone].cards[0].player == leftPlayer)))
                 {
                     this.Invoke((MethodInvoker)delegate
                     {
@@ -4036,10 +4077,19 @@ namespace Mafia
                     });
                     report[21] += "Jednego gracza zachróniła gas maska ";
                 }
-                else if(leftPlayer != -1)
+                else if (leftPlayer != -1)
                 {
+                    //mortwy
+                    if (!players[leftPlayer].alive)
+                    {
+                        report[21] += "Jedyn gracz uż je mortwy ";
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += "Gracz " + players[leftPlayer].name + " uż je mortwy." + endl; InfoLabel.Focus();
+                        });
+                    }
                     //doktor
-                    if (players[leftPlayer].hasDoktor)
+                    else if (players[leftPlayer].hasDoktor)
                     {
                         report[21] += "Jednego gracza ulyczył doktor ";
                         this.Invoke((MethodInvoker)delegate
@@ -4091,20 +4141,29 @@ namespace Mafia
                     }
                 }
                 //gracz po prawej
-                if (numberOfAlivePlayers > 2 && (cards[(int)cardTypeNumber.mag].cards[1].player == rightPlayer || cards[(int)cardTypeNumber.szilenyStrzelec].cards[1].player == rightPlayer || cards[(int)cardTypeNumber.alCapone].cards[0].player == rightPlayer))
+                if (numberOfAlivePlayers > 2 && rightPlayer != -1 && players[rightPlayer].alive && (((cards[(int)cardTypeNumber.mag].numInGame >= 2 && cards[(int)cardTypeNumber.mag].cards[1].player == rightPlayer) || (cards[(int)cardTypeNumber.szilenyStrzelec].numInGame >= 2 && cards[(int)cardTypeNumber.szilenyStrzelec].cards[1].player == rightPlayer) || (cards[(int)cardTypeNumber.alCapone].numInGame >= 1 && cards[(int)cardTypeNumber.alCapone].cards[0].player == rightPlayer))))
                 {
                     this.Invoke((MethodInvoker)delegate
                     {
                         Info2RTB.Text += "Gracz " + players[rightPlayer].name + " mo gas maske." + endl; InfoLabel.Focus();
                     });
-                    report[21] += " a drugigo gracza zachróniła gas maska.";
+                    report[21] += "a drugigo gracza zachróniła gas maska.";
                 }
                 else if (rightPlayer != -1 && numberOfAlivePlayers > 2)
                 {
-                    //doktor
-                    if (players[rightPlayer].hasDoktor)
+                    //mortwy
+                    if (!players[rightPlayer].alive)
                     {
-                        report[21] += " a drugigo gracza ulyczył doktor.";
+                        report[21] += "a drugi gracz uż je mortwy.";
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += "Gracz " + players[rightPlayer].name + " uż je mortwy." + endl; InfoLabel.Focus();
+                        });
+                    }
+                    //doktor
+                    else if (players[rightPlayer].hasDoktor)
+                    {
+                        report[21] += "a drugigo gracza ulyczył doktor.";
                         this.Invoke((MethodInvoker)delegate
                         {
                             Info2RTB.Text += "Gracz " + players[rightPlayer].name + " był ulyczóny przez doktora." + endl; InfoLabel.Focus();
@@ -4119,7 +4178,7 @@ namespace Mafia
                         {
                             Info2RTB.Text += "Gracz " + players[rightPlayer].name + " stracił mrakoszlapa " + (players[rightPlayer].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                         });
-                        report[21] += " a drugimu graczowi umrził mrakoszlap " + (players[rightPlayer].cardNumbers[item] + 1) + ".";
+                        report[21] += "a drugimu graczowi umrził mrakoszlap " + (players[rightPlayer].cardNumbers[item] + 1) + ".";
                         if (players[rightPlayer].hasPijavica)
                         {
                             pijawicaMrakoszlaps++;
@@ -4158,7 +4217,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4225,7 +4284,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4360,7 +4419,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4387,7 +4446,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4426,7 +4485,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4441,11 +4500,11 @@ namespace Mafia
                 });
                 if (players[player].wake)
                 {
-                    this.Invoke((MethodInvoker)delegate { InfoLabel.Text = wakes1 + name + wakes2; });
+                    this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[10, lang] + name + text[11, lang]; });
                 }
                 else
                 {
-                    this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "SPI!!! " + wakes1 + name + wakes2; });
+                    this.Invoke((MethodInvoker)delegate { InfoLabel.Text = "SPI!!! " + text[10, lang] + name + text[11, lang]; });
                     this.Invoke((MethodInvoker)delegate { Info2RTB.Text += "Gracz " + players[player].name + " - " + name + " - je we więzieniu." + endl; InfoLabel.Focus(); });
                 }
                 undo = false;
@@ -4465,7 +4524,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4496,7 +4555,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4534,7 +4593,7 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
                                     players[player].cardNumbers.Add(nextMrakoszlap);
-                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap], player, 1, true));
+                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], player, 1, true));
                                     cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
                                     nextMrakoszlap++;
                                 }
@@ -4547,7 +4606,7 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.neprustrzelnoWesta);
                                     players[player].cardNumbers.Add(nextKewlar);
-                                    cards[(int)cardTypeNumber.neprustrzelnoWesta].cards.Add(new Card(cardNames[(int)cardTypeNumber.neprustrzelnoWesta], player, 1, true));
+                                    cards[(int)cardTypeNumber.neprustrzelnoWesta].cards.Add(new Card(cardNames[(int)cardTypeNumber.neprustrzelnoWesta, lang], player, 1, true));
                                     cards[(int)cardTypeNumber.neprustrzelnoWesta].numInGame++;
                                     nextKewlar++;
                                 }
@@ -4560,7 +4619,7 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
                                     players[player].cardNumbers.Add(nextZwierciadlo);
-                                    cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo], player, 1, true));
+                                    cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo, lang], player, 1, true));
                                     cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
                                     nextZwierciadlo++;
                                 }
@@ -4573,7 +4632,7 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.imunita);
                                     players[player].cardNumbers.Add(nextImunita);
-                                    cards[(int)cardTypeNumber.imunita].cards.Add(new Card(cardNames[(int)cardTypeNumber.imunita], player, 1, true));
+                                    cards[(int)cardTypeNumber.imunita].cards.Add(new Card(cardNames[(int)cardTypeNumber.imunita, lang], player, 1, true));
                                     cards[(int)cardTypeNumber.imunita].numInGame++;
                                     nextImunita++;
                                 }
@@ -4586,7 +4645,7 @@ namespace Mafia
                                     });
                                     players[player].cardTypes.Add((int)cardTypeNumber.prowazochodec);
                                     players[player].cardNumbers.Add(nextProwazochodec);
-                                    cards[(int)cardTypeNumber.prowazochodec].cards.Add(new Card(cardNames[(int)cardTypeNumber.prowazochodec], player, 1, true));
+                                    cards[(int)cardTypeNumber.prowazochodec].cards.Add(new Card(cardNames[(int)cardTypeNumber.prowazochodec, lang], player, 1, true));
                                     cards[(int)cardTypeNumber.prowazochodec].numInGame++;
                                     nextProwazochodec++;
                                 }
@@ -4659,7 +4718,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4672,7 +4731,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
         
@@ -4685,7 +4744,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
         
@@ -4706,7 +4765,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4743,7 +4802,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4756,7 +4815,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4780,7 +4839,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4801,7 +4860,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
         
@@ -4876,7 +4935,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4896,6 +4955,26 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
+            }
+        }
+
+        public void zapiszErrorDoTxt(string s)
+        {
+            try
+            {
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(".\\logs\\" + dateAndTimeWhenProgramStarted + "_Errors.txt", true))
+                {
+                    file.Write(s);
+                    /*foreach (string line in Info2RTB.Lines)
+                    {
+                        file.Write(line + file.NewLine);
+                    }*/
+                    file.Close();
+                }
+            }
+            catch (Exception exception1)
+            {
                 MessageBox.Show("An error occurred:\n" + exception1);
             }
         }
@@ -4906,11 +4985,11 @@ namespace Mafia
         {
             if(amountOfSpecificCards[cardType] == 1)
             {
-                return cardNames[cardType].ToString();
+                return cardNames[cardType, lang].ToString();
             }
             else
             {
-                return (cardNames[cardType] + " " + (cardNumber + 1)).ToString();
+                return (cardNames[cardType, lang] + " " + (cardNumber + 1)).ToString();
             }
         }
 
@@ -4927,8 +5006,46 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
+        }
+
+        public int leftPlayer(int player)
+        {
+            int leftPlayer = -1;
+            int p = player;
+            for (int i = 0; i < numberOfPlayers && leftPlayer == -1; i++)
+            {
+                p++;
+                if (p == numberOfPlayers)
+                {
+                    p = 0;
+                }
+                if (players[p].alive && p != player)
+                {
+                    leftPlayer = p;
+                }
+            }
+            return leftPlayer;
+        }
+
+        public int rightPlayer(int player)
+        {
+            int rightPlayer = -1;
+            int p = player;
+            for (int i = 0; i < numberOfPlayers && rightPlayer == -1; i++)
+            {
+                p--;
+                if (p < 0)
+                {
+                    p = numberOfPlayers - 1;
+                }
+                if (players[p].alive && p != player)
+                {
+                    rightPlayer = p;
+                }
+            }
+            return rightPlayer;
         }
 
         // functions for tunnels and drawing stuff
@@ -4964,14 +5081,14 @@ namespace Mafia
                     if (tunnels[i, 0] == p1 && tunnels[i, 1] == p2)
                     {
                         add = false;
-                        this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Między graczami " + players[p1].name + " i " + players[p2].name + " już jest tunel." + endl; InfoLabel.Focus(); });
+                        this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Między graczami " + players[p1].name + " i " + players[p2].name + " już jest tunel." + endl; InfoLabel.Focus(); });
                     }
                 }
                 //tunel nimoze byc zrobiony na ateiste
                 if (players[p2].cardTypes.Contains(25) && add)
                 {
                     add = false;
-                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Na gracza " + players[p2].name + " nie idzie zrobić tunel, bo je ateista." + endl; InfoLabel.Focus(); });
+                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Na gracza " + players[p2].name + " nie idzie zrobić tunel, bo je ateista." + endl; InfoLabel.Focus(); });
                 }
                 if (add)
                 {
@@ -4984,12 +5101,12 @@ namespace Mafia
                     tunnels[numberOfTunnels, 0] = p1;
                     tunnels[numberOfTunnels, 1] = p2;
                     numberOfTunnels++;
-                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> Tunel zrobióny z gracza " + players[p1].name + " na gracza " + players[p2].name + "." + endl; InfoLabel.Focus(); });
+                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + "Tunel zrobióny z gracza " + players[p1].name + " na gracza " + players[p2].name + "." + endl; InfoLabel.Focus(); });
                 }
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -5038,7 +5155,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -5055,7 +5172,7 @@ namespace Mafia
                 }
                 catch (Exception exception1)
                 {
-                    MessageBox.Show("An error occurred:\n" + exception1);
+                    MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
                 }
             }
         }
@@ -5085,7 +5202,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -5121,7 +5238,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -5208,7 +5325,7 @@ namespace Mafia
                 }
                 catch (Exception exception1)
                 {
-                    MessageBox.Show("An error occurred:\n" + exception1);
+                    MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
                 }
             }
             drawBullet();
@@ -5225,7 +5342,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -5238,7 +5355,7 @@ namespace Mafia
             }
             catch (Exception exception1)
             {
-                MessageBox.Show("An error occurred:\n" + exception1);
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 

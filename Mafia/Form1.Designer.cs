@@ -48,6 +48,7 @@
             this.addCardCombobox = new System.Windows.Forms.ComboBox();
             this.removeCardCombobox = new System.Windows.Forms.ComboBox();
             this.undoButton = new System.Windows.Forms.Button();
+            this.comboBoxLanguage = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numOfPlayersNumericUpDown)).BeginInit();
             this.SuspendLayout();
@@ -98,9 +99,9 @@
             this.labelStartPhase.AutoSize = true;
             this.labelStartPhase.Location = new System.Drawing.Point(29, 25);
             this.labelStartPhase.Name = "labelStartPhase";
-            this.labelStartPhase.Size = new System.Drawing.Size(66, 13);
+            this.labelStartPhase.Size = new System.Drawing.Size(81, 13);
             this.labelStartPhase.TabIndex = 8;
-            this.labelStartPhase.Text = "Ilosc graczy:";
+            this.labelStartPhase.Text = "labelStartPhase";
             // 
             // buttonStartPhase
             // 
@@ -274,11 +275,24 @@
             this.undoButton.UseVisualStyleBackColor = true;
             this.undoButton.Click += new System.EventHandler(this.undoButton_Click);
             // 
+            // comboBoxLanguage
+            // 
+            this.comboBoxLanguage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxLanguage.FormattingEnabled = true;
+            this.comboBoxLanguage.Items.AddRange(new object[] {
+            "Hovorová slezština",
+            "Čeština"});
+            this.comboBoxLanguage.Location = new System.Drawing.Point(164, 23);
+            this.comboBoxLanguage.Name = "comboBoxLanguage";
+            this.comboBoxLanguage.Size = new System.Drawing.Size(121, 21);
+            this.comboBoxLanguage.TabIndex = 25;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1362, 712);
+            this.Controls.Add(this.comboBoxLanguage);
             this.Controls.Add(this.undoButton);
             this.Controls.Add(this.removeCardCombobox);
             this.Controls.Add(this.addCardCombobox);
@@ -334,6 +348,7 @@
         private System.Windows.Forms.ComboBox addCardCombobox;
         private System.Windows.Forms.ComboBox removeCardCombobox;
         private System.Windows.Forms.Button undoButton;
+        private System.Windows.Forms.ComboBox comboBoxLanguage;
     }
 }
 
