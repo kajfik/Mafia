@@ -148,7 +148,7 @@
             this.yesButton.Name = "yesButton";
             this.yesButton.Size = new System.Drawing.Size(64, 23);
             this.yesButton.TabIndex = 13;
-            this.yesButton.Text = "Ja";
+            this.yesButton.Text = "Yes";
             this.yesButton.UseVisualStyleBackColor = true;
             this.yesButton.Click += new System.EventHandler(this.yesButton_Click);
             // 
@@ -159,7 +159,7 @@
             this.noButton.Name = "noButton";
             this.noButton.Size = new System.Drawing.Size(64, 23);
             this.noButton.TabIndex = 14;
-            this.noButton.Text = "Ni";
+            this.noButton.Text = "No";
             this.noButton.UseVisualStyleBackColor = true;
             this.noButton.Click += new System.EventHandler(this.noButton_Click);
             // 
@@ -298,7 +298,6 @@
             this.Controls.Add(this.addCardCombobox);
             this.Controls.Add(this.removeCardButton);
             this.Controls.Add(this.addCardButton);
-            this.Controls.Add(this.buttonStartNight);
             this.Controls.Add(this.shotButton);
             this.Controls.Add(this.votedButton);
             this.Controls.Add(this.Info2RTB);
@@ -313,9 +312,10 @@
             this.Controls.Add(this.InfoRTB);
             this.Controls.Add(this.numOfPlayersNumericUpDown);
             this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.buttonStartNight);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "Mafia v2.6";
+            this.Text = "Mafia v3.4";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
