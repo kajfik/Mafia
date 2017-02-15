@@ -1296,17 +1296,6 @@ namespace Mafia
                     drawPlayersCardsRTB();
                 }
                 resetBullet();
-                this.Invoke((MethodInvoker)delegate
-                {
-                    /*pictureBox1.Update();
-                    pictureBox1.Show();
-                    InfoRTB.Update();
-                    InfoRTB.Show();
-                    Info2RTB.Update();
-                    Info2RTB.Show();
-                    PlayersCardsRichTextBox.Update();
-                    PlayersCardsRichTextBox.Show();*/
-                });
                 for (int i = 0; i < numberOfPlayers; i++)
                 {
                     players[i].wake = true;
@@ -5345,7 +5334,7 @@ namespace Mafia
                         g.DrawLine(pen, x2, y2, x4, y4);
                         pictureBox1.Image = bmp;
                         pictureBox1.Update();
-                        Thread.Sleep(360);
+                        Thread.Sleep(50);
                     }
                 }
                 pen.Dispose();
