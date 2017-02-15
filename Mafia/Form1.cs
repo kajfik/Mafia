@@ -423,6 +423,16 @@ namespace Mafia
         */
         const int numberOfReports = 29;
         string[] report = new string[numberOfReports];
+        Image slinaImage = Image.FromFile(".\\icons\\slina.png");
+        Image piosekImage = Image.FromFile(".\\icons\\piosek.png");
+        Image magnetImage = Image.FromFile(".\\icons\\magnet.png");
+        Image matrixImage = Image.FromFile(".\\icons\\matrix.jpg");
+        Image meciarImage = Image.FromFile(".\\icons\\dwa.png");
+        Image kovacImage = Image.FromFile(".\\icons\\minus1.png");
+        Image masovyVrahImage = Image.FromFile(".\\icons\\masovyVrah.png");
+        Image soudceImage = Image.FromFile(".\\icons\\soudce.png");
+        Image ofiaraImage = Image.FromFile(".\\icons\\ofiara.png");
+        Image zachronionyImage = Image.FromFile(".\\icons\\zachroniony.png");
         int lang;
         readonly string[,] text =
         {
@@ -577,6 +587,7 @@ namespace Mafia
             /* 147 */{"Był przegłosowany", "Byl přehlasován" },
             /* 148 */{"Dodaj kartę", "Přidej kartu" },
             /* 149 */{"Odbierz kartę", "Odeber kartu" },
+            /* 150 */{"Bómba", "Bomba" }
         };
         
         // functions for initializing stuff
@@ -628,6 +639,8 @@ namespace Mafia
                 undoButton.Visible = false;
                 numOfPlayersNumericUpDown.Enabled = false;
                 numOfPlayersNumericUpDown.Visible = false;
+                bombButton.Enabled = false;
+                bombButton.Visible = false;
                 labelStartPhase.Text = "Please select a language:";
                 comboBoxLanguage.SelectedIndex = 0;
                 this.AcceptButton = buttonStartPhase;
@@ -690,6 +703,7 @@ namespace Mafia
                     votedButton.Text = text[147, lang];
                     addCardButton.Text = text[148, lang];
                     removeCardButton.Text = text[149, lang];
+                    bombButton.Text = text[150, lang];
                     startPhase = 1;
                 }
                 // setting num of players
@@ -791,6 +805,8 @@ namespace Mafia
                     noButton.Visible = true;
                     InfoLabel.Enabled = true;
                     InfoLabel.Visible = true;
+                    shotButton.Enabled = true;
+                    shotButton.Visible = true;
                     thread2.Start();
                 }
             }
@@ -1120,6 +1136,7 @@ namespace Mafia
                 pictureBox1.Height = height;
                 bmp = new Bitmap(width, height);
                 g = Graphics.FromImage(bmp);
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 g.Clear(Color.White);
                 pictureBox1.Image = bmp;
                 pictureBoxArray = new int[width, height];
@@ -1232,6 +1249,12 @@ namespace Mafia
                 buttonStartNight.Visible = false;
                 undoButton.Enabled = false;
                 undoButton.Visible = false;
+                bombButton.Enabled = false;
+                bombButton.Visible = false;
+                addCardButton.Enabled = false;
+                addCardButton.Visible = false;
+                removeCardButton.Enabled = false;
+                removeCardButton.Visible = false;
                 if (cards[(int)cardTypeNumber.mafian].numInGame > 0)
                 {
                     InfoLabel.Text = text[3, lang];
@@ -1275,14 +1298,14 @@ namespace Mafia
                 resetBullet();
                 this.Invoke((MethodInvoker)delegate
                 {
-                    pictureBox1.Update();
+                    /*pictureBox1.Update();
                     pictureBox1.Show();
                     InfoRTB.Update();
                     InfoRTB.Show();
                     Info2RTB.Update();
                     Info2RTB.Show();
                     PlayersCardsRichTextBox.Update();
-                    PlayersCardsRichTextBox.Show();
+                    PlayersCardsRichTextBox.Show();*/
                 });
                 for (int i = 0; i < numberOfPlayers; i++)
                 {
@@ -1311,9 +1334,9 @@ namespace Mafia
                 grabarzMrakoszlaps = 0;
                 this.Invoke((MethodInvoker)delegate
                 {
-                    drawPlayers();
                     yesButton.Enabled = false;
                     noButton.Enabled = false;
+                    drawPlayers();
                     shotButton.Text = text[5, lang];
                     InfoRTB.Text = raport + text[6, lang] + endl;
                     InfoLabel.Focus();
@@ -2332,7 +2355,7 @@ namespace Mafia
                         shots.Clear();
                         // kuskona
                         int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                        if(players[playerWithKuskona].alive && kuskonaZyskolMraka)
+                        if(playerWithKuskona != -1 && players[playerWithKuskona].alive && kuskonaZyskolMraka)
                         {
                             this.Invoke((MethodInvoker)delegate
                             {
@@ -2347,7 +2370,7 @@ namespace Mafia
                         }
                         // gandalf
                         int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                        if (players[playerWithGandalf].alive && gandalfZyskolMraka)
+                        if (playerWithGandalf != -1 && players[playerWithGandalf].alive && gandalfZyskolMraka)
                         {
                             this.Invoke((MethodInvoker)delegate
                             {
@@ -2362,7 +2385,7 @@ namespace Mafia
                         }
                         // pijawica
                         int playerWithPijavica = cards[(int)cardTypeNumber.pijavica].cards[0].player;
-                        if (players[playerWithPijavica].alive)
+                        if (playerWithPijavica != -1 && players[playerWithPijavica].alive)
                         {
                             for (int i = 0; i < pijawicaMrakoszlaps; i++)
                             {
@@ -2380,7 +2403,7 @@ namespace Mafia
                         }
                         // kobra
                         int playerWithKobra = cards[(int)cardTypeNumber.kobra].cards[0].player;
-                        if (players[playerWithKobra].alive)
+                        if (playerWithKobra != -1 && players[playerWithKobra].alive)
                         {
                             if (players[playerWithPijavica].hasKobra)
                             {
@@ -2400,7 +2423,7 @@ namespace Mafia
                         }
                         // grabarz
                         int playerWithGrabarz = cards[(int)cardTypeNumber.grabarz].cards[0].player;
-                        if (players[playerWithGrabarz].alive)
+                        if (playerWithGrabarz != -1 && players[playerWithGrabarz].alive)
                         {
                             if (grabarz)
                             {
@@ -2421,7 +2444,7 @@ namespace Mafia
                         }
                         // sklenar
                         int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                        if (players[playerWithSklenar].alive)
+                        if (playerWithSklenar != -1 && players[playerWithSklenar].alive)
                         {
                             if (sklenarMirrors.Count > 0 && !players[playerWithSklenar].cardTypes.Contains((int)cardTypeNumber.zwierciadlo))
                             {
@@ -2476,7 +2499,8 @@ namespace Mafia
                         {
                             this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[76, lang] + endl; InfoLabel.Focus(); });
                             wants2(text[77, lang]);
-                            if(undo)
+                            if (endNight) { nightPhase = 20; return 0; }
+                            if (undo)
                             {
                                 restoreGameState(gameStates.Count - 1);
                                 return 0;
@@ -3280,7 +3304,7 @@ namespace Mafia
                         shots.Clear();
                         // kuskona
                         int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                        if (players[playerWithKuskona].alive && kuskonaZyskolMraka)
+                        if (playerWithKuskona != -1 && players[playerWithKuskona].alive && kuskonaZyskolMraka)
                         {
                             this.Invoke((MethodInvoker)delegate
                             {
@@ -3295,7 +3319,7 @@ namespace Mafia
                         }
                         // gandalf
                         int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                        if (players[playerWithGandalf].alive && gandalfZyskolMraka)
+                        if (playerWithGandalf != -1 && players[playerWithGandalf].alive && gandalfZyskolMraka)
                         {
                             this.Invoke((MethodInvoker)delegate
                             {
@@ -3310,7 +3334,7 @@ namespace Mafia
                         }
                         // pijawica
                         int playerWithPijavica = cards[(int)cardTypeNumber.pijavica].cards[0].player;
-                        if (players[playerWithPijavica].alive)
+                        if (playerWithPijavica != -1 && players[playerWithPijavica].alive)
                         {
                             for (int i = 0; i < pijawicaMrakoszlaps; i++)
                             {
@@ -3328,7 +3352,7 @@ namespace Mafia
                         }
                         // kobra
                         int playerWithKobra = cards[(int)cardTypeNumber.kobra].cards[0].player;
-                        if (players[playerWithKobra].alive)
+                        if (playerWithKobra != -1 && players[playerWithKobra].alive)
                         {
                             if (players[playerWithPijavica].hasKobra)
                             {
@@ -3348,7 +3372,7 @@ namespace Mafia
                         }
                         // grabarz
                         int playerWithGrabarz = cards[(int)cardTypeNumber.grabarz].cards[0].player;
-                        if (players[playerWithGrabarz].alive)
+                        if (playerWithGrabarz != -1 && players[playerWithGrabarz].alive)
                         {
                             if (grabarz)
                             {
@@ -3369,7 +3393,7 @@ namespace Mafia
                         }
                         // sklenar
                         int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                        if (players[playerWithSklenar].alive)
+                        if (playerWithSklenar != -1 && players[playerWithSklenar].alive)
                         {
                             if (sklenarMirrors.Count > 0 && !players[playerWithSklenar].cardTypes.Contains((int)cardTypeNumber.zwierciadlo))
                             {
@@ -3459,15 +3483,17 @@ namespace Mafia
                     votedButton.Enabled = true;
                     votedButton.Visible = true;
                     shotButton.Enabled = true;
-                    shotButton.Visible = true;
                     shotButton.Text = text[78, lang];
+                    shotButton.Visible = true;
                     buttonStartNight.Enabled = true;
-                    buttonStartNight.Visible = true;
                     buttonStartNight.Text = text[79, lang];
+                    buttonStartNight.Visible = true;
                     addCardButton.Enabled = true;
                     addCardButton.Visible = true;
                     removeCardButton.Enabled = true;
                     removeCardButton.Visible = true;
+                    bombButton.Enabled = true;
+                    bombButton.Visible = true;
                 });
 
                 wants2("");
@@ -3477,7 +3503,7 @@ namespace Mafia
                     canClickPictureBox = false;
                     // kuskona
                     int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                    if (players[playerWithKuskona].alive && kuskonaZyskolMraka)
+                    if (playerWithKuskona != -1 && players[playerWithKuskona].alive && kuskonaZyskolMraka)
                     {
                         this.Invoke((MethodInvoker)delegate
                         {
@@ -3492,7 +3518,7 @@ namespace Mafia
                     }
                     // gandalf
                     int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                    if (players[playerWithGandalf].alive && gandalfZyskolMraka)
+                    if (playerWithGandalf != -1 && players[playerWithGandalf].alive && gandalfZyskolMraka)
                     {
                         this.Invoke((MethodInvoker)delegate
                         {
@@ -3519,6 +3545,8 @@ namespace Mafia
                         yesButton.Visible = true;
                         noButton.Enabled = true;
                         noButton.Visible = true;
+                        bombButton.Enabled = false;
+                        bombButton.Visible = false;
                     });
                     return 0;
                 }
@@ -3756,7 +3784,7 @@ namespace Mafia
             {
                 report[reportNumber] = text[80, lang];
             }
-            if (first || bullet.trajectory[bullet.trajectory.Count - 1] == -1)
+            if (first || bullet.trajectory.Count == 0 || bullet.trajectory[bullet.trajectory.Count - 1] == -1)
             {
                 bullet.trajectory.Add(from);
             }
@@ -4159,11 +4187,15 @@ namespace Mafia
                 {
                     pijawicaMrakoszlaps++;
                 }
+                this.Invoke((MethodInvoker)delegate { drawPlayers(); });
                 death(target, reportNumber);
                 bullet.trajectory.Add(-1);
             }
-            drawPlayersCardsRTB();
-            this.Invoke((MethodInvoker)delegate { drawPlayers(); });
+            if (first)
+            {
+                drawPlayersCardsRTB();
+                this.Invoke((MethodInvoker)delegate { drawPlayers(); });
+            }
         }
 
         public void toxic(int rightPlayer, int leftPlayer)
@@ -4381,6 +4413,7 @@ namespace Mafia
                     {
                         pijawicaMrakoszlaps++;
                     }
+                    this.Invoke((MethodInvoker)delegate { drawPlayers(); });
                     death(target, 9 + bulletNumber);
                 }
                 drawPlayersCardsRTB();
@@ -4404,11 +4437,8 @@ namespace Mafia
                     {
                         int item = players[player].cardTypes.FindIndex(x => x == (int)cardTypeNumber.prowazochodec);
                         int mrakoszlap = players[player].cardNumbers[item];
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[124, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                            InfoRTB.Text += text[125, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                        });
+                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[124, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                        InfoRTB.Text += text[125, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                         players[player].cardTypes.RemoveAt(item);
                         players[player].cardNumbers.RemoveAt(item);
                     }
@@ -4417,11 +4447,8 @@ namespace Mafia
                     {
                         int item = players[player].cardTypes.FindIndex(x => x == (int)cardTypeNumber.imunita);
                         int mrakoszlap = players[player].cardNumbers[item];
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[126, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                            InfoRTB.Text += text[127, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                        });
+                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[126, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                        InfoRTB.Text += text[127, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                         players[player].cardTypes.RemoveAt(item);
                         players[player].cardNumbers.RemoveAt(item);
                     }
@@ -4430,11 +4457,8 @@ namespace Mafia
                     {
                         int item = players[player].cardTypes.FindIndex(x => x == (int)cardTypeNumber.mrakoszlap);
                         int mrakoszlap = players[player].cardNumbers[item];
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[116, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                            InfoRTB.Text += text[128, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                        });
+                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[116, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                        InfoRTB.Text += text[128, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                         //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
                         if (players[player].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
                         {
@@ -4452,10 +4476,8 @@ namespace Mafia
                     else
                     {
                         death(player, -1);
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            InfoRTB.Text += text[118, lang] + players[player].name + "." + endl; InfoLabel.Focus();
-                        });
+                        InfoRTB.Text += text[118, lang] + players[player].name + "." + endl; InfoLabel.Focus();
+                        drawPlayers();
                     }
                 }
                 //shot
@@ -4465,11 +4487,8 @@ namespace Mafia
                     if (players[player].cardTypes.Contains((int)cardTypeNumber.imunita))
                     {
                         int item = players[player].cardTypes.FindIndex(x => x == (int)cardTypeNumber.imunita);
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[126, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                            InfoRTB.Text += text[127, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                        });
+                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[126, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                        InfoRTB.Text += text[127, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                         players[player].cardTypes.RemoveAt(item);
                         players[player].cardNumbers.RemoveAt(item);
                     }
@@ -4477,11 +4496,8 @@ namespace Mafia
                     else if (players[player].cardTypes.Contains((int)cardTypeNumber.neprustrzelnoWesta))
                     {
                         int item = players[player].cardTypes.FindIndex(x => x == (int)cardTypeNumber.neprustrzelnoWesta);
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[108, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                            InfoRTB.Text += text[129, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                        });
+                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[108, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                        InfoRTB.Text += text[129, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                         players[player].cardTypes.RemoveAt(item);
                         players[player].cardNumbers.RemoveAt(item);
                     }
@@ -4490,11 +4506,8 @@ namespace Mafia
                     {
                         int item = players[player].cardTypes.FindIndex(x => x == (int)cardTypeNumber.mrakoszlap);
                         int mrakoszlap = players[player].cardNumbers[item];
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[116, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                            InfoRTB.Text += text[128, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                        });
+                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[116, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                        InfoRTB.Text += text[128, lang] + (players[player].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
                         //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
                         if (players[player].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
                         {
@@ -4512,14 +4525,11 @@ namespace Mafia
                     else
                     {
                         death(player, -1);
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            InfoRTB.Text += text[118, lang] + players[player].name + "." + endl; InfoLabel.Focus();
-                        });
+                        InfoRTB.Text += text[118, lang] + players[player].name + "." + endl; InfoLabel.Focus();
+                        drawPlayers();
                     }
                 }
                 drawPlayersCardsRTB();
-                this.Invoke((MethodInvoker)delegate { drawPlayers(); });
             }
             catch (Exception exception1)
             {
@@ -4762,6 +4772,7 @@ namespace Mafia
                                 addCardButton.Enabled = true;
                                 removeCardButton.Enabled = true;
                                 undoButton.Enabled = true;
+                                bombButton.Enabled = true;
                                 addCardCombobox.Enabled = false;
                                 addCardCombobox.Visible = false;
                                 addRemoveCard = 0;
@@ -4799,7 +4810,7 @@ namespace Mafia
                         else
                         {
                             int player = pictureBoxArray[e.X, e.Y];
-                            if (player < numberOfPlayers && players[player].alive)
+                            if (player >= 0 && player < numberOfPlayers && players[player].alive)
                             {
                                 votedShoot(player);
                             }
@@ -4812,6 +4823,7 @@ namespace Mafia
                             addCardButton.Enabled = true;
                             removeCardButton.Enabled = true;
                             undoButton.Enabled = true;
+                            bombButton.Enabled = true;
                             if (numberOfAlivePlayers == cards[(int)cardTypeNumber.mafian].numInGame || cards[(int)cardTypeNumber.mafian].numInGame == 0)
                             {
                                 waitForClickYesNo.Set();
@@ -4864,6 +4876,7 @@ namespace Mafia
                 addCardButton.Enabled = false;
                 removeCardButton.Enabled = false;
                 undoButton.Enabled = false;
+                bombButton.Enabled = false;
                 canClickPictureBox = true;
                 votedShot = 0;
             }
@@ -4900,6 +4913,7 @@ namespace Mafia
                     addCardButton.Enabled = false;
                     removeCardButton.Enabled = false;
                     undoButton.Enabled = false;
+                    bombButton.Enabled = false;
                     canClickPictureBox = true;
                     votedShot = 1;
                 }
@@ -4935,6 +4949,7 @@ namespace Mafia
                 addCardButton.Enabled = false;
                 removeCardButton.Enabled = false;
                 undoButton.Enabled = false;
+                bombButton.Enabled = false;
                 addCardCombobox.Enabled = true;
                 addCardCombobox.Visible = true;
                 addCardCombobox.DroppedDown = true;
@@ -4959,6 +4974,7 @@ namespace Mafia
                 addCardButton.Enabled = false;
                 removeCardButton.Enabled = false;
                 undoButton.Enabled = false;
+                bombButton.Enabled = false;
                 addRemoveCard = 2;
                 canClickPictureBox = true;
             }
@@ -5009,6 +5025,7 @@ namespace Mafia
                 addCardButton.Enabled = true;
                 removeCardButton.Enabled = true;
                 undoButton.Enabled = true;
+                bombButton.Enabled = true;
                 removeCardCombobox.Items.Clear();
                 removeCardCombobox.Enabled = false;
                 removeCardCombobox.Visible = false;
@@ -5018,6 +5035,30 @@ namespace Mafia
             else
             {
                 removeCardCombobox.DroppedDown = true;
+            }
+        }
+
+        private void bombButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                votedShot = 1;
+                for (int i = 0; i < numberOfPlayers; i++)
+                {
+                    if (players[i].alive)
+                    {
+                        votedShoot(i);
+                        if (numberOfAlivePlayers == cards[(int)cardTypeNumber.mafian].numInGame || cards[(int)cardTypeNumber.mafian].numInGame == 0)
+                        {
+                            i = numberOfPlayers;
+                            waitForClickYesNo.Set();
+                        }
+                    }
+                }
+            }
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -5217,15 +5258,15 @@ namespace Mafia
                 Pen pen = new Pen(Brushes.White);
                 if (t == 0)
                 {
-                    pen = new Pen(Brushes.LightSkyBlue);
+                    pen.Color = Color.LightSkyBlue;
                 }
                 else if (t == 1)
                 {
-                    pen = new Pen(Brushes.LightGreen);
+                    pen.Color = Color.LightGreen;
                 }
                 else if (t == 2)
                 {
-                    pen = new Pen(Brushes.LightSalmon);
+                    pen.Color = Color.LightSalmon;
                 }
 
                 pen.Width = 16;
@@ -5260,44 +5301,15 @@ namespace Mafia
 
         public void drawTunnels()
         {
-            for (int i = 0; i < numberOfTunnels; i++)
+            try
             {
-                try
+                for (int i = 0; i < numberOfTunnels; i++)
                 {
                     if (tunnels[i, 0] != -1 && players[tunnels[i, 0]].alive && players[tunnels[i, 1]].alive)
                     {
                         drawTunnel(tunnels[i, 0], tunnels[i, 1], i);
                     }
                 }
-                catch (Exception exception1)
-                {
-                    MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
-                }
-            }
-        }
-
-        public void drawCircle(int x, int y, int d, int player)
-        {
-            try
-            {
-                for (int i = x - d; i < x + d; i++)
-                {
-                    for (int j = y - d; j < y + d; j++)
-                    {
-                        if (i >= 0 && i < width && j >= 0 && j < height)
-                        {
-                            if (distance(x, y, i, j) >= d - 1 && distance(x, y, i, j) <= d)
-                            {
-                                bmp.SetPixel(i, j, Color.Black);
-                            }
-                            else if (distance(x, y, i, j) < d - 1)
-                            {
-                                bmp.SetPixel(i, j, Color.White);
-                            }
-                        }
-                    }
-                }
-                pictureBox1.Image = bmp;
             }
             catch (Exception exception1)
             {
@@ -5331,9 +5343,13 @@ namespace Mafia
                         int y4 = Convert.ToInt32(y2 - 10 * Math.Sin(Deg2Rad(angle - 150)));
                         g.DrawLine(pen, x2, y2, x3, y3);
                         g.DrawLine(pen, x2, y2, x4, y4);
+                        pictureBox1.Image = bmp;
+                        pictureBox1.Update();
+                        Thread.Sleep(360);
                     }
                 }
                 pen.Dispose();
+                bullet.trajectory.Clear();
             }
             catch (Exception exception1)
             {
@@ -5343,91 +5359,72 @@ namespace Mafia
 
         public void drawPlayers()
         {
-            g.Clear(Color.White);
-            drawTunnels();
-            for (int i = 0; i < numberOfPlayers; i++)
+            try
             {
-                try
+                g.Clear(Color.White);
+                drawTunnels();
+                for (int i = 0; i < numberOfPlayers; i++)
                 {
                     if (players[i].alive)
                     {
-                        drawCircle(players[i].position[0], players[i].position[1], circleDiameter, i);
+                        g.DrawEllipse(Pens.Black, players[i].position[0] - circleDiameter, players[i].position[1] - circleDiameter, circleDiameter * 2, circleDiameter * 2);
                         Font font = new Font(FontFamily.GenericMonospace, 10, FontStyle.Bold);
                         g.DrawString(players[i].name, font, Brushes.Black, players[i].position[0] - 4 * (players[i].name.Length), players[i].position[1] - 8);
                         if (isNight)
                         {
                             if (players[i].hasSlina)
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\slina.png");
-                                Rectangle rect2 = new Rectangle(players[i].position[0], players[i].position[1], 50, 50);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(slinaImage, players[i].position[0], players[i].position[1], 50, 50);
                             }
                             if (players[i].hasPiosek)
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\piosek.png");
-                                Rectangle rect2 = new Rectangle(players[i].position[0], players[i].position[1] - 60, 50, 40);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(piosekImage, players[i].position[0], players[i].position[1] - 60, 50, 40);
                             }
                             if (players[i].hasMagnet)
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\magnet.png");
-                                Rectangle rect2 = new Rectangle(players[i].position[0] - 60, players[i].position[1] + 7, 45, 40);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(magnetImage, players[i].position[0] - 60, players[i].position[1] + 7, 45, 40);
                             }
-                            if (matrix && players[i].cardTypes.Contains(4))
+                            if (matrix && players[i].cardTypes.Contains((int)cardTypeNumber.matrix))
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\matrix.jpg");
-                                Rectangle rect2 = new Rectangle(players[i].position[0] - 70, players[i].position[1] - 50, 70, 40);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(matrixImage, players[i].position[0] - 70, players[i].position[1] - 50, 70, 40);
                             }
                         }
                         else
                         {
-                            if (players[i].cardTypes.Contains(20))
+                            if (players[i].cardTypes.Contains((int)cardTypeNumber.meciar))
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\dwa.png");
-                                Rectangle rect2 = new Rectangle(players[i].position[0] + 20, players[i].position[1], 50, 50);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(meciarImage, players[i].position[0] + 20, players[i].position[1], 50, 50);
                             }
-                            if (players[i].cardTypes.Contains(21))
+                            if (players[i].cardTypes.Contains((int)cardTypeNumber.kovac))
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\minus1.png");
-                                Rectangle rect2 = new Rectangle(players[i].position[0] + 20, players[i].position[1] - 60, 50, 50);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(kovacImage, players[i].position[0] + 20, players[i].position[1] - 60, 50, 50);
                             }
-                            if (players[i].cardTypes.Contains(28))
+                            if (players[i].cardTypes.Contains((int)cardTypeNumber.masowyWrah))
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\masovyVrah.png");
-                                Rectangle rect2 = new Rectangle(players[i].position[0] - 70, players[i].position[1], 50, 50);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(masovyVrahImage, players[i].position[0] - 70, players[i].position[1], 50, 50);
                             }
                             if (players[i].hasZakazGlosowanio)
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\soudce.png");
-                                Rectangle rect2 = new Rectangle(players[i].position[0] - 70, players[i].position[1] - 60, 50, 50);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(soudceImage, players[i].position[0] - 70, players[i].position[1] - 60, 50, 50);
                             }
                             if (players[i].ofiaraKata)
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\ofiara.png");
-                                Rectangle rect2 = new Rectangle(players[i].position[0] - 17, players[i].position[1] - 68, 40, 60);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(ofiaraImage, players[i].position[0] - 17, players[i].position[1] - 68, 40, 60);
                             }
                             if (players[i].zachronionyKatym)
                             {
-                                Image newImage2 = Image.FromFile(".\\icons\\zachroniony.png");
-                                Rectangle rect2 = new Rectangle(players[i].position[0] - 17, players[i].position[1] + 8, 40, 60);
-                                g.DrawImage(newImage2, rect2);
+                                g.DrawImage(zachronionyImage, players[i].position[0] - 17, players[i].position[1] + 8, 40, 60);
                             }
                         }
                     }
                 }
-                catch (Exception exception1)
-                {
-                    MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
-                }
+                drawBullet();
+                pictureBox1.Image = bmp;
             }
-            drawBullet();
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
+            }
         }
 
         // functions not even worth describing

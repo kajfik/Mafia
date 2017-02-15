@@ -49,6 +49,7 @@
             this.removeCardCombobox = new System.Windows.Forms.ComboBox();
             this.undoButton = new System.Windows.Forms.Button();
             this.comboBoxLanguage = new System.Windows.Forms.ComboBox();
+            this.bombButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numOfPlayersNumericUpDown)).BeginInit();
             this.SuspendLayout();
@@ -287,11 +288,23 @@
             this.comboBoxLanguage.Size = new System.Drawing.Size(121, 21);
             this.comboBoxLanguage.TabIndex = 25;
             // 
+            // bombButton
+            // 
+            this.bombButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.bombButton.Location = new System.Drawing.Point(779, 15);
+            this.bombButton.Name = "bombButton";
+            this.bombButton.Size = new System.Drawing.Size(64, 23);
+            this.bombButton.TabIndex = 26;
+            this.bombButton.Text = "Bomba";
+            this.bombButton.UseVisualStyleBackColor = true;
+            this.bombButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.bombButton_MouseDown);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1362, 712);
+            this.Controls.Add(this.bombButton);
             this.Controls.Add(this.comboBoxLanguage);
             this.Controls.Add(this.undoButton);
             this.Controls.Add(this.removeCardCombobox);
@@ -315,7 +328,7 @@
             this.Controls.Add(this.buttonStartNight);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "Mafia v3.4";
+            this.Text = "Mafia v3.5";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -349,6 +362,7 @@
         private System.Windows.Forms.ComboBox removeCardCombobox;
         private System.Windows.Forms.Button undoButton;
         private System.Windows.Forms.ComboBox comboBoxLanguage;
+        private System.Windows.Forms.Button bombButton;
     }
 }
 
