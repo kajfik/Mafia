@@ -29,7 +29,7 @@ namespace Mafia
         /// </summary>
 
         const int numOfSpecificCards = 37;
-        int[] amountOfSpecificCards = new int[numOfSpecificCards]
+        readonly int[] amountOfSpecificCards = new int[numOfSpecificCards]
         {
          7, //mrakoszlap,
          2, //imunita
@@ -70,7 +70,7 @@ namespace Mafia
          1  //jozinZBazin
         };
 
-        string[,] cardNames = new string[numOfSpecificCards, 2]
+        readonly string[,] cardNames = new string[numOfSpecificCards, 2]
         {
             {"mrakoszlap", "mrákošlap"},
             {"imunita", "imunita"},
@@ -111,7 +111,7 @@ namespace Mafia
             {"jozin z bazin", "jožin z bažin"}
         };
 
-        int[] cardNightPhases = new int[numOfSpecificCards]
+        readonly int[] cardNightPhases = new int[numOfSpecificCards]
         {
              -1, //mrakoszlap,
              -1, //imunita
@@ -308,6 +308,8 @@ namespace Mafia
             public bool removeCardComboboxVisible;
             public bool undoButtonEnabled;
             public bool undoButtonVisible;
+            public bool bombButtonEnabled;
+            public bool bombButtonVisible;
             public string PlayersCardsRichTextBoxText;
             public int starterThread;
         }
@@ -1397,16 +1399,14 @@ namespace Mafia
                     drawPlayers();
                     zapiszCoSeDzialoDoTxt();
                 });
-
-                if (evenNight)
+                //initializing + budzyni mafii na poczontku pjyrszej nocy
+                if (nightPhase == cardNightPhases[(int)cardTypeNumber.jailer])
                 {
-                    //initializing + jailer - 5
-                    if (nightPhase == 0)
+                    //initializing
+                    initNight();
+                    //jailer
+                    if (evenNight)
                     {
-                        //initializing
-                        initNight();
-                        
-                        //jailer
                         int cardType = (int)cardTypeNumber.jailer;
                         int cardNumber = 0;
                         int player = cards[cardType].cards[cardNumber].player;
@@ -1431,293 +1431,718 @@ namespace Mafia
                                 this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + ' ' + text[9, lang] + endl; InfoLabel.Focus(); });
                                 cards[cardType].cards[cardNumber].uses--;
                             }
-                            
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
                     }
-                    //grabarz - 33
-                    else if (nightPhase == 1)
+                    //budzyni mafii na poczontku pjyrszej nocy
+                    else if (numOfNight == 1)
                     {
-                        int cardType = (int)cardTypeNumber.grabarz;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[76, lang] + endl; InfoLabel.Focus(); });
+                        wants2(text[77, lang]);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 25; return 0; }
+                            restoreGameState(gameStates.Count - 1);
+                            return 0;
+                        }
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            undoButton.Enabled = true;
+                            undoButton.Visible = true;
+                        });
+                    }
+                }
+                //grabarz
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.grabarz])
+                {
+                    int cardType = (int)cardTypeNumber.grabarz;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
+                        wants(player, name);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                            if (wantsUse)
+                            {
+                                grabarz = true;
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[12, lang] + endl; InfoLabel.Focus(); });
+                                cards[cardType].cards[cardNumber].uses--;
+                            }
+                        }
+                    }
+                }
+                //matrix
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.matrix])
+                {
+                    int cardType = (int)cardTypeNumber.matrix;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
+                        wants(player, name);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                            if (wantsUse)
+                            {
+                                matrix = true;
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[13, lang] + endl; InfoLabel.Focus(); });
+                                cards[cardType].cards[cardNumber].uses--;
+                            }
+                        }
+                    }
+                }
+                //mag 1, 2 a 3
+                else if (nightPhase >= cardNightPhases[(int)cardTypeNumber.mag] && nightPhase <= cardNightPhases[(int)cardTypeNumber.mag] + 2)
+                {
+                    int cardType = (int)cardTypeNumber.mag;
+                    int cardNumber = nightPhase - cardNightPhases[(int)cardTypeNumber.mag];
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                    {
+                        if (!wakedPlayers.Contains(player))
+                        {
+                            wakedPlayers.Add(player);
+                        }
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
+                        this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[14, lang]; });
+                        clickPlayer(player, name, true, cardType);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        tunel1 = clickedPlayer;
+                        this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[15, lang]; });
+                        clickPlayer(player, name, false, cardType);
+                        if (undo) { return 2; }
+                        tunel2 = clickedPlayer;
+                        if (players[player].wake)
+                        {
+                            addTunnel(tunel1, tunel2);
+                        }
+                    }
+                }
+                //slina 1 a 2
+                else if (nightPhase >= cardNightPhases[(int)cardTypeNumber.slina] && nightPhase <= cardNightPhases[(int)cardTypeNumber.slina] + 1)
+                {
+                    int cardType = (int)cardTypeNumber.slina;
+                    int cardNumber = nightPhase - cardNightPhases[(int)cardTypeNumber.slina];
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
+                        this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[16, lang]; });
+                        clickPlayer(player, name, true, cardType);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                            players[clickedPlayer].hasSlina = true;
+                            report[2] = text[17, lang] + players[clickedPlayer].name + ". ";
+                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[17, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                        }
+                    }
+                }
+                //pijavica
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.pijavica])
+                {
+                    int cardType = (int)cardTypeNumber.pijavica;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
+                        this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[18, lang]; });
+                        clickPlayer(player, name, true, cardType);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                            players[clickedPlayer].hasPijavica = true;
+                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[19, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                        }
+                    }
+                }
+                //piosek
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.piosek])
+                {
+                    int cardType = (int)cardTypeNumber.piosek;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
+                        this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[20, lang]; });
+                        clickPlayer(player, name, true, cardType);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                            if ((cards[(int)cardTypeNumber.mag].numInGame >= 2 && cards[(int)cardTypeNumber.mag].cards[1].player == clickedPlayer) || (cards[(int)cardTypeNumber.szilenyStrzelec].numInGame >= 2 && cards[(int)cardTypeNumber.szilenyStrzelec].cards[1].player == clickedPlayer) || (cards[(int)cardTypeNumber.alCapone].numInGame >= 1 && cards[(int)cardTypeNumber.alCapone].cards[0].player == clickedPlayer))
+                            {
+                                this.Invoke((MethodInvoker)delegate { report[3] = text[21, lang]; Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[22, lang] + endl; InfoLabel.Focus(); });
+                            }
+                            else
+                            {
+                                players[clickedPlayer].hasPiosek = true;
+                                report[3] = text[23, lang] + players[clickedPlayer].name + ".";
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[23, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                            }
+                        }
+                    }
+                }
+                //Duch Bobo - w parzystej albo po tym co umrzil
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.duchBobo])
+                {
+                    int cardType = (int)cardTypeNumber.duchBobo;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && ((players[player].alive && evenNight) || (!players[player].alive && !duchBoboExhibowolPoUmrziciu)))
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
+                        this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[28, lang]; });
+                        clickPlayer(player, name, true, cardType);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (!wakedPlayers.Contains(player))
+                        {
+                            wakedPlayers.Add(player);
+                        }
+                        players[clickedPlayer].hasExhib = true;
+                        report[1] = text[30, lang] + players[clickedPlayer].name + ". ";
+                        this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[29, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                        duchBoboExhibowolPoUmrziciu = true;
+                    }
+                }
+                //doktor
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.doktor])
+                {
+                    int cardType = (int)cardTypeNumber.doktor;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
+                        if ((numOfNight + 2 + posunyciDoktora) % 3 == 0)
+                        {
+                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[31, lang]; });
+                        }
+                        else
+                        {
+                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[32, lang]; });
+                        }
+                        clickPlayer(player, name, true, cardType);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                            if (cards[(int)cardTypeNumber.mafian].numInGame + 1 == numberOfAlivePlayers && (numOfNight + 2 + posunyciDoktora) % 3 != 0)
+                            {
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[33, lang] + endl; InfoLabel.Focus(); });
+                            }
+                            else
+                            {
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[34, lang] + endl; InfoLabel.Focus(); });
+                                players[clickedPlayer].hasDoktor = true;
+                            }
+                        }
+                    }
+                }
+                //jozin z bazin
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.jozinZBazin])
+                {
+                    int cardType = (int)cardTypeNumber.jozinZBazin;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
+                        wants(player, name);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        while (cards[cardType].cards[cardNumber].uses > 0 && wantsUse && players[player].wake)
+                        {
+                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[35, lang]; });
+                            clickPlayer(player, name, false, cardType);
+                            if (undo) { return 2; }
+                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[36, lang] + endl; InfoLabel.Focus(); });
+                            cards[cardType].cards[cardNumber].uses--;
+                            players[clickedPlayer].numberOfBloto++;
+
+                            if (cards[cardType].cards[cardNumber].uses > 0)
+                            {
+                                this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[37, lang] + name + text[38, lang] + endl; InfoLabel.Focus(); });
+                                wants(player, name);
+                                if (undo) { return 2; }
+                            }
+                        }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                        }
+                    }
+                }
+                //mafian 1, 2 a 3
+                else if (nightPhase >= cardNightPhases[(int)cardTypeNumber.mafian] && nightPhase <= cardNightPhases[(int)cardTypeNumber.mafian] + 2)
+                {
+                    int cardType = (int)cardTypeNumber.mafian;
+                    int cardNumber = nightPhase - cardNightPhases[(int)cardTypeNumber.mafian];
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
+                        this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[39, lang]; });
+                        clickPlayer(player, name, true, cardType);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                            if (mafiaShoots == numberOfPlayers)
+                            {
+                                mafiaShoots = clickedPlayer;
+                            }
+                            else if (mafiaShoots != numberOfPlayers && mafiaShoots != -1 && clickedPlayer != mafiaShoots)
+                            {
+                                mafiaShoots = -1;
+                            }
+                            mafiansAim++;
+                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[41, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
+                        }
+                        else
+                        {
+                            mafiaShoots = -1;
+                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[42, lang] + endl; InfoLabel.Focus(); });
+                        }
+                        if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
+                        {
+                            if (mafiaShoots == -1)
+                            {
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[43, lang] + endl; InfoLabel.Focus(); });
+                            }
+                            else
+                            {
+                                Shot shot = new Shot();
+                                shot.type = 0;
+                                shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
+                                shot.textInfo2RTB = ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
+                                shots.Add(shot);
+                            }
+                        }
+                    }
+                }
+                //sniper
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.sniper])
+                {
+                    int cardType = (int)cardTypeNumber.sniper;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                    {
+                        resetBullet();
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
+                        wants(player, name);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (wantsUse)
+                        {
+                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[45, lang]; });
+                            clickPlayer(player, name, false, cardType);
                             if (undo) { return 2; }
                             if (players[player].wake)
                             {
-                                if (!wakedPlayers.Contains(player))
+                                cards[cardType].cards[cardNumber].uses--;
+                                Shot shot = new Shot();
+                                shot.type = 0;
+                                shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 7; shot.first = true; shot.sniper = true;
+                                shot.textInfo2RTB = ">>> " + text[47, lang] + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
+                                shots.Add(shot);
+                            }
+                        }
+                        if (players[player].wake && !wakedPlayers.Contains(player))
+                        {
+                            wakedPlayers.Add(player);
+                        }
+                    }
+                }
+                //fusekla
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.fusekla])
+                {
+                    int cardType = (int)cardTypeNumber.fusekla;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                    {
+                        resetBullet();
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
+                        wants(player, name);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                            if (wantsUse)
+                            {
+                                Shot shot = new Shot();
+                                shot.type = 2;
+                                shot.targetRight = rightPlayer(player);
+                                shot.targetLeft = leftPlayer(player);
+                                shot.textInfo2RTB = ">>> " + text[48, lang] + endl;
+                                shots.Add(shot);
+                                cards[cardType].cards[cardNumber].uses--;
+                            }
+                        }
+                    }
+                }
+                //slepy kat
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.slepyKat])
+                {
+                    int cardType = (int)cardTypeNumber.slepyKat;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
+                        wants(player, name);
+                        if (endNight) { nightPhase = 25; return 0; }
+                        if (undo) { return 2; }
+                        if (wantsUse)
+                        {
+                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[52, lang]; });
+                            clickPlayer(player, name, true, cardType);
+                            if (undo) { return 2; }
+                            zachroniony = clickedPlayer;
+                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[53, lang]; });
+                            clickPlayer(player, name, false, cardType);
+                            if (undo) { return 2; }
+                            ofiara = clickedPlayer;
+                            if (players[player].wake)
+                            {
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[zachroniony].name + text[54, lang] + players[ofiara].name + "." + endl; InfoLabel.Focus(); });
+                                cards[cardType].cards[cardNumber].uses--;
+                                players[zachroniony].zachronionyKatym = true;
+                                players[ofiara].ofiaraKata = true;
+                            }
+                        }
+                        if (players[player].wake)
+                        {
+                            if (!wakedPlayers.Contains(player))
+                            {
+                                wakedPlayers.Add(player);
+                            }
+                        }
+                    }
+                }
+                //luneta
+                else if (nightPhase == cardNightPhases[(int)cardTypeNumber.luneta])
+                {
+                    int cardType = (int)cardTypeNumber.luneta;
+                    int cardNumber = 0;
+                    string name = nameOfCard(cardType, cardNumber);
+                    int player = cards[cardType].cards[cardNumber].player;
+                    if ((numOfNight + 1) % 3 == 0 && cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                    {
+                        this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
+                        if (players[player].wake)
+                        {
+                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[55, lang] + endl; InfoLabel.Focus(); });
+                            int zmiana1, zmiana2, pomoc;
+                            int iloscGraczowKierziSeObudzili = wakedPlayers.Count;
+                            for (int i = 0; i < 50000; i++)
+                            {
+                                zmiana1 = rnd.Next(iloscGraczowKierziSeObudzili);
+                                zmiana2 = rnd.Next(iloscGraczowKierziSeObudzili);
+                                if (zmiana1 != zmiana2)
                                 {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (wantsUse)
-                                {
-                                    grabarz = true;
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[12, lang] + endl; InfoLabel.Focus(); });
-                                    cards[cardType].cards[cardNumber].uses--;
+                                    pomoc = wakedPlayers[zmiana1];
+                                    wakedPlayers[zmiana1] = wakedPlayers[zmiana2];
+                                    wakedPlayers[zmiana2] = pomoc;
+                                    pomoc = wakedPlayers[zmiana1];
+                                    wakedPlayers[zmiana1] = wakedPlayers[zmiana2];
+                                    wakedPlayers[zmiana2] = pomoc;
                                 }
                             }
-                            
+                            for (int i = 0; i < iloscGraczowKierziSeObudzili; i++)
+                            {
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[56, lang] + players[wakedPlayers[i]].name + "." + endl; InfoLabel.Focus(); });
+                            }
+                            wants2(text[57, lang]);
+                            if (endNight) { nightPhase = 25; return 0; }
+                            if (undo) { return 2; }
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
                     }
-                    //matrix - 4
-                    else if (nightPhase == 2)
+                }
+                //strzilani + koniec nocy
+                else if (nightPhase == 25)
+                {
+                    // normal shots
+                    List<Shot> shotsToRemove = new List<Shot>();
+                    foreach (Shot shot in shots)
+                    {
+                        if (shot.type == 0)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                Info2RTB.Text += shot.textInfo2RTB;
+                            });
+                            resetBullet();
+                            if (players[shot.target].alive)
+                            {
+                                shoot(shot.target, shot.from, shot.mafia, shot.reportNumber, shot.first, shot.sniper);
+                            }
+                            else
+                            {
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[shot.target].name + text[58, lang] + endl; InfoLabel.Focus(); });
+                                report[shot.reportNumber] = text[59, lang];
+                            }
+                            shotsToRemove.Add(shot);
+                        }
+                    }
+                    foreach (Shot shot in shotsToRemove)
+                    {
+                        shots.Remove(shot);
+                    }
+                    shotsToRemove.Clear();
+                    // matrix shots initializing
+                    if (matrix)
                     {
                         int cardType = (int)cardTypeNumber.matrix;
                         int cardNumber = 0;
                         string name = nameOfCard(cardType, cardNumber);
                         int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (wantsUse)
-                                {
-                                    matrix = true;
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[13, lang] + endl; InfoLabel.Focus(); });
-                                    cards[cardType].cards[cardNumber].uses--;
-                                }
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mag1 - 6
-                    else if (nightPhase == 3)
-                    {
-                        int cardType = (int)cardTypeNumber.mag;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                        this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[60, lang] + matrixBullets + "." + endl; InfoLabel.Focus(); });
+                        report[8] = text[61, lang] + matrixBullets + ".";
+                        if (matrixBullets > 0)
                         {
                             this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[14, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            tunel1 = clickedPlayer;
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[15, lang]; });
-                            clickPlayer(player, name, false, cardType);
-                            if (undo) { return 2; }
-                            tunel2 = clickedPlayer;
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                addTunnel(tunel1, tunel2);
-                            }
-                            
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mag2 - 6
-                    else if (nightPhase == 4)
-                    {
-                        int cardType = (int)cardTypeNumber.mag;
-                        int cardNumber = 1;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                        for (int i = 0; i < matrixBullets; i++)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[14, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
+                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[45, lang]; });
+                            clickPlayer(player, "", false, cardType);
                             if (undo) { return 2; }
-                            tunel1 = clickedPlayer;
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[15, lang]; });
-                            clickPlayer(player, name, false, cardType);
-                            if (undo) { return 2; }
-                            tunel2 = clickedPlayer;
-                            if (players[player].wake)
+                            report[9 + i] = text[62, lang] + (i + 1) + ", ";
+                            Shot shot = new Shot();
+                            shot.type = 1;
+                            shot.target = clickedPlayer; shot.from = player; shot.bulletNumber = i;
+                            shot.textInfo2RTB = ">>> " + text[63, lang] + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
+                            shots.Add(shot);
+                            if (matrixBullets - i - 1 > 0)
                             {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                addTunnel(tunel1, tunel2);
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[64, lang] + (matrixBullets - i - 1) + "." + endl; InfoLabel.Focus(); });
                             }
-                            
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
+                        matrix = false;
                     }
-                    //mag3 - 6
-                    else if (nightPhase == 5)
+                    // matrix shots and fusekla
+                    foreach (Shot shot in shots)
                     {
-                        int cardType = (int)cardTypeNumber.mag;
-                        int cardNumber = 2;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                        this.Invoke((MethodInvoker)delegate
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[14, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            tunel1 = clickedPlayer;
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[15, lang]; });
-                            clickPlayer(player, name, false, cardType);
-                            if (undo) { return 2; }
-                            tunel2 = clickedPlayer;
-                            if (players[player].wake)
+                            Info2RTB.Text += shot.textInfo2RTB;
+                        });
+                        if (shot.type == 1)
+                        {
+                            resetBullet();
+                            if (players[shot.target].alive)
                             {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                addTunnel(tunel1, tunel2);
+                                matrixShoot(shot.target, shot.from, shot.bulletNumber);
                             }
-                            
+                            else
+                            {
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[shot.target].name + text[58, lang] + endl; InfoLabel.Focus(); });
+                            }
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
+                        else if (shot.type == 2)
+                        {
+                            toxic(shot.targetRight, shot.targetLeft);
+                        }
                     }
-                    //slina1 - 7
-                    else if (nightPhase == 6)
+                    shots.Clear();
+                    // kuskona
+                    int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
+                    if (playerWithKuskona != -1 && players[playerWithKuskona].alive && kuskonaZyskolMraka)
                     {
-                        int cardType = (int)cardTypeNumber.slina;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                        this.Invoke((MethodInvoker)delegate
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[16, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                players[clickedPlayer].hasSlina = true;
-                                report[2] = text[17, lang] + players[clickedPlayer].name + ". ";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[17, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
+                            Info2RTB.Text += text[65, lang] + ' ' + players[playerWithKuskona].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                        });
+                        report[27] += text[65, lang] + text[66, lang] + (nextMrakoszlap + 1) + ". ";
+                        players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                        players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
+                        cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKuskona, 1, true));
+                        cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                        nextMrakoszlap++;
                     }
-                    //slina2 - 7
-                    else if (nightPhase == 7)
+                    // gandalf
+                    int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
+                    if (playerWithGandalf != -1 && players[playerWithGandalf].alive && gandalfZyskolMraka)
                     {
-                        int cardType = (int)cardTypeNumber.slina;
-                        int cardNumber = 1;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                        this.Invoke((MethodInvoker)delegate
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[16, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                players[clickedPlayer].hasSlina = true;
-                                report[2] += text[17, lang] + players[clickedPlayer].name + ".";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[17, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
+                            Info2RTB.Text += text[67, lang] + ' ' + players[playerWithGandalf].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                        });
+                        report[26] += text[67, lang] + text[66, lang] + (nextMrakoszlap + 1) + ". ";
+                        players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                        players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
+                        cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGandalf, 1, true));
+                        cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                        nextMrakoszlap++;
                     }
-                    //pijavica - 8
-                    else if (nightPhase == 8)
+                    // pijawica
+                    int playerWithPijavica = cards[(int)cardTypeNumber.pijavica].cards[0].player;
+                    if (playerWithPijavica != -1 && players[playerWithPijavica].alive)
                     {
-                        int cardType = (int)cardTypeNumber.pijavica;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
+                        for (int i = 0; i < pijawicaMrakoszlaps; i++)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[18, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
+                            this.Invoke((MethodInvoker)delegate
                             {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                players[clickedPlayer].hasPijavica = true;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[19, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            
+                                Info2RTB.Text += text[69, lang] + ' ' + players[playerWithPijavica].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                            });
+                            report[22] += text[69, lang] + text[68, lang] + (nextMrakoszlap + 1) + ". ";
+                            players[playerWithPijavica].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                            players[playerWithPijavica].cardNumbers.Add(nextMrakoszlap);
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithPijavica, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                            nextMrakoszlap++;
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
                     }
-                    //piosek - 9
-                    else if (nightPhase == 9)
+                    // kobra
+                    int playerWithKobra = cards[(int)cardTypeNumber.kobra].cards[0].player;
+                    if (playerWithKobra != -1 && players[playerWithKobra].alive)
                     {
-                        int cardType = (int)cardTypeNumber.piosek;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
+                        if (players[playerWithPijavica].hasKobra)
                         {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[20, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
+                            this.Invoke((MethodInvoker)delegate
                             {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if ((cards[(int)cardTypeNumber.mag].numInGame >= 2 && cards[(int)cardTypeNumber.mag].cards[1].player == clickedPlayer) || (cards[(int)cardTypeNumber.szilenyStrzelec].numInGame >= 2 && cards[(int)cardTypeNumber.szilenyStrzelec].cards[1].player == clickedPlayer) || (cards[(int)cardTypeNumber.alCapone].numInGame >= 1 && cards[(int)cardTypeNumber.alCapone].cards[0].player == clickedPlayer))
-                                {
-                                    this.Invoke((MethodInvoker)delegate { report[3] = text[21, lang]; Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[22, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    players[clickedPlayer].hasPiosek = true;
-                                    report[3] = text[23, lang] + players[clickedPlayer].name + ".";
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[23, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                                }
-                            }
-                            
+                                Info2RTB.Text += text[70, lang] + ' ' + players[playerWithKobra].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                            });
+                            report[23] = text[70, lang] + text[68, lang] + (nextMrakoszlap + 1) + text[71, lang];
+                            players[playerWithKobra].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                            players[playerWithKobra].cardNumbers.Add(nextMrakoszlap);
+                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKobra, 1, true));
+                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                            nextMrakoszlap++;
+                            cards[(int)cardTypeNumber.pijavica].cards[0].uses--;
+                            cards[(int)cardTypeNumber.kobra].cards[0].uses--;
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
                     }
-                    //kobra - 10
-                    else if (nightPhase == 10)
+                    // grabarz
+                    int playerWithGrabarz = cards[(int)cardTypeNumber.grabarz].cards[0].player;
+                    if (playerWithGrabarz != -1 && players[playerWithGrabarz].alive)
+                    {
+                        if (grabarz)
+                        {
+                            for (int i = 0; i < grabarzMrakoszlaps; i++)
+                            {
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    Info2RTB.Text += text[72, lang] + ' ' + players[playerWithGrabarz].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                                });
+                                report[24] += text[72, lang] + text[66, lang] + (nextMrakoszlap + 1) + ". ";
+                                players[playerWithGrabarz].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                                players[playerWithGrabarz].cardNumbers.Add(nextMrakoszlap);
+                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGrabarz, 1, true));
+                                cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                                nextMrakoszlap++;
+                            }
+                        }
+                    }
+                    // sklenar
+                    int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
+                    if (playerWithSklenar != -1 && players[playerWithSklenar].alive)
+                    {
+                        if (sklenarMirrors.Count > 0 && !players[playerWithSklenar].cardTypes.Contains((int)cardTypeNumber.zwierciadlo))
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                Info2RTB.Text += text[74, lang] + ' ' + players[playerWithSklenar].name + text[73, lang] + (nextZwierciadlo + 1) + "." + endl; InfoLabel.Focus();
+                            });
+                            report[25] = text[74, lang] + text[73, lang] + (nextZwierciadlo + 1) + ".";
+                            players[playerWithSklenar].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
+                            players[playerWithSklenar].cardNumbers.Add(nextZwierciadlo);
+                            cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo, lang], playerWithSklenar, 1, true));
+                            cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
+                            nextZwierciadlo++;
+                        }
+                    }
+
+                    drawPlayersCardsRTB();
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        zapiszCoSeDzialoDoTxt();
+                        buttonStartNight.Enabled = true;
+                        buttonStartNight.Visible = true;
+                        buttonStartNight.Text = text[5, lang];
+                        yesButton.Enabled = false;
+                        yesButton.Visible = false;
+                        noButton.Enabled = false;
+                        noButton.Visible = false;
+                    });
+                    if (endNight)
+                    {
+                        return 1;
+                    }
+                    wants2("");
+                    report[0] = text[75, lang] + endl;
+                    if (undo || wantsUse)
+                    {
+                        return 1;
+                    }
+                }
+                else if (evenNight)
+                {
+                    //kobra
+                    if (nightPhase == cardNightPhases[(int)cardTypeNumber.kobra])
                     {
                         int cardType = (int)cardTypeNumber.kobra;
                         int cardNumber = 0;
@@ -1740,11 +2165,9 @@ namespace Mafia
                                 this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[25, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
                     }
-                    //magnet - 11
-                    else if (nightPhase == 11)
+                    //magnet
+                    else if (nightPhase == cardNightPhases[(int)cardTypeNumber.magnet])
                     {
                         int cardType = (int)cardTypeNumber.magnet;
                         int cardNumber = 0;
@@ -1766,299 +2189,13 @@ namespace Mafia
                                 players[clickedPlayer].hasMagnet = true;
                                 this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[27, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
                             }
-                            
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
                     }
-                    //Duch Bobo - 13
-                    else if (nightPhase == 12)
-                    {
-                        int cardType = (int)cardTypeNumber.duchBobo;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && (players[player].alive || (!players[player].alive && !duchBoboExhibowolPoUmrziciu)))
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[28, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake || (!players[player].alive && !duchBoboExhibowolPoUmrziciu))
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                players[clickedPlayer].hasExhib = true;
-                                report[1] = text[30, lang] + players[clickedPlayer].name + ". ";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[29, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            if (!duchBoboExhibowolPoUmrziciu && !players[player].alive)
-                            {
-                                duchBoboExhibowolPoUmrziciu = true;
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //doktor - 35
-                    else if (nightPhase == 13)
-                    {
-                        int cardType = (int)cardTypeNumber.doktor;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            if ((numOfNight + 2 + posunyciDoktora) % 3 == 0)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[31, lang]; });
-                            }
-                            else
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[32, lang]; });
-                            }
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (cards[(int)cardTypeNumber.mafian].numInGame + 1 == numberOfAlivePlayers && (numOfNight + 2 + posunyciDoktora) % 3 != 0)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[33, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[34, lang] + endl; InfoLabel.Focus(); });
-                                    players[clickedPlayer].hasDoktor = true;
-                                }
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //jozin z bazin - 36
-                    else if (nightPhase == 14)
-                    {
-                        int cardType = (int)cardTypeNumber.jozinZBazin;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            while (cards[cardType].cards[cardNumber].uses > 0 && wantsUse && players[player].wake)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[35, lang]; });
-                                clickPlayer(player, name, false, cardType);
-                                if (undo) { return 2; }
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[36, lang] + endl; InfoLabel.Focus(); });
-                                cards[cardType].cards[cardNumber].uses--;
-                                players[clickedPlayer].numberOfBloto++;
-
-                                if (cards[cardType].cards[cardNumber].uses > 0)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[37, lang] + name + text[38, lang] + endl; InfoLabel.Focus(); });
-                                    wants(player, name);
-                                    if (undo) { return 2; }
-                                }
-                            }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mafia1 - 14
-                    else if (nightPhase == 15)
-                    {
-                        int cardType = (int)cardTypeNumber.mafian;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[39, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (mafiaShoots == numberOfPlayers)
-                                {
-                                    mafiaShoots = clickedPlayer;
-                                }
-                                else if (mafiaShoots != numberOfPlayers && mafiaShoots != -1 && clickedPlayer != mafiaShoots)
-                                {
-                                    mafiaShoots = -1;
-                                }
-                                mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[41, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            else
-                            {
-                                mafiaShoots = -1;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[42, lang] + endl; InfoLabel.Focus(); });
-                            }
-                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
-                            {
-                                if (mafiaShoots == -1)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[43, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    Shot shot = new Shot();
-                                    shot.type = 0;
-                                    shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                    shots.Add(shot);
-                                }
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mafia2 - 14
-                    else if (nightPhase == 16)
-                    {
-                        int cardType = (int)cardTypeNumber.mafian;
-                        int cardNumber = 1;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[39, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (mafiaShoots == numberOfPlayers)
-                                {
-                                    mafiaShoots = clickedPlayer;
-                                }
-                                else if (mafiaShoots != numberOfPlayers && mafiaShoots != -1 && clickedPlayer != mafiaShoots)
-                                {
-                                    mafiaShoots = -1;
-                                }
-                                mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[41, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            else
-                            {
-                                mafiaShoots = -1;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[42, lang] + endl; InfoLabel.Focus(); });
-                            }
-                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
-                            {
-                                if (mafiaShoots == -1)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[43, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    Shot shot = new Shot();
-                                    shot.type = 0;
-                                    shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                    shots.Add(shot);
-                                }
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mafia3 - 14
-                    else if (nightPhase == 17)
-                    {
-                        int cardType = (int)cardTypeNumber.mafian;
-                        int cardNumber = 2;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[39, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (mafiaShoots == numberOfPlayers)
-                                {
-                                    mafiaShoots = clickedPlayer;
-                                }
-                                else if (mafiaShoots != numberOfPlayers && mafiaShoots != -1 && clickedPlayer != mafiaShoots)
-                                {
-                                    mafiaShoots = -1;
-                                }
-                                mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[41, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            else
-                            {
-                                mafiaShoots = -1;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[42, lang] + endl; InfoLabel.Focus(); });
-                            }
-                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
-                            {
-                                if (mafiaShoots == -1)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[43, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    Shot shot = new Shot();
-                                    shot.type = 0;
-                                    shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                    shots.Add(shot);
-                                }
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //szileny strzelec1 - 15
-                    else if (nightPhase == 18)
+                    //szileny strzelec 1 a 2
+                    else if (nightPhase >= cardNightPhases[(int)cardTypeNumber.szilenyStrzelec] && nightPhase <= cardNightPhases[(int)cardTypeNumber.szilenyStrzelec] + 1)
                     {
                         int cardType = (int)cardTypeNumber.szilenyStrzelec;
-                        int cardNumber = 0;
+                        int cardNumber = nightPhase - cardNightPhases[(int)cardTypeNumber.szilenyStrzelec];
                         string name = nameOfCard(cardType, cardNumber);
                         int player = cards[cardType].cards[cardNumber].player;
                         if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
@@ -2076,122 +2213,14 @@ namespace Mafia
                                 }
                                 Shot shot = new Shot();
                                 shot.type = 0;
-                                shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 5; shot.first = true; shot.sniper = false;
+                                shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 5 + cardNumber; shot.first = true; shot.sniper = false;
                                 shot.textInfo2RTB = ">>> " + text[46, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
                                 shots.Add(shot);
                             }
-                            
                         }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
                     }
-                    //szileny strzelec2 - 15
-                    else if (nightPhase == 19)
-                    {
-                        int cardType = (int)cardTypeNumber.szilenyStrzelec;
-                        int cardNumber = 1;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[45, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                Shot shot = new Shot();
-                                shot.type = 0;
-                                shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 6; shot.first = true; shot.sniper = false;
-                                shot.textInfo2RTB = ">>> " + text[46, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                shots.Add(shot);
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //sniper - 16
-                    else if (nightPhase == 20)
-                    {
-                        int cardType = (int)cardTypeNumber.sniper;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            resetBullet();
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (wantsUse)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[45, lang]; });
-                                clickPlayer(player, name, false, cardType);
-                                if (undo) { return 2; }
-                                if (players[player].wake)
-                                {
-                                    cards[cardType].cards[cardNumber].uses--;
-                                    Shot shot = new Shot();
-                                    shot.type = 0;
-                                    shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 7; shot.first = true; shot.sniper = true;
-                                    shot.textInfo2RTB = ">>> " + text[47, lang] + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                    shots.Add(shot);
-                                }
-                            }
-                            if (players[player].wake && !wakedPlayers.Contains(player))
-                            {
-                                wakedPlayers.Add(player);
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //fusekla - 12
-                    else if (nightPhase == 21)
-                    {
-                        int cardType = (int)cardTypeNumber.fusekla;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            resetBullet();
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (wantsUse)
-                                {
-                                    Shot shot = new Shot();
-                                    shot.type = 2;
-                                    shot.targetRight = rightPlayer(player);
-                                    shot.targetLeft = leftPlayer(player);
-                                    shot.textInfo2RTB = ">>> " + text[48, lang] + endl;
-                                    shots.Add(shot);
-                                    cards[cardType].cards[cardNumber].uses--;
-                                }
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //soudce - 29
-                    else if (nightPhase == 22)
+                    //soudce
+                    else if (nightPhase == cardNightPhases[(int)cardTypeNumber.soudce])
                     {
                         int cardType = (int)cardTypeNumber.soudce;
                         int cardNumber = 0;
@@ -2214,1263 +2243,11 @@ namespace Mafia
                                 report[28] = text[51, lang] + players[clickedPlayer].name + ". ";
                                 players[clickedPlayer].hasZakazGlosowanio = true;
                             }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //slepy kat - 30
-                    else if (nightPhase == 23)
-                    {
-                        int cardType = (int)cardTypeNumber.slepyKat;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (wantsUse)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[52, lang]; });
-                                clickPlayer(player, name, true, cardType);
-                                if (undo) { return 2; }
-                                zachroniony = clickedPlayer;
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[53, lang]; });
-                                clickPlayer(player, name, false, cardType);
-                                if (undo) { return 2; }
-                                ofiara = clickedPlayer;
-                                if (players[player].wake)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[zachroniony].name + text[54, lang] + players[ofiara].name + "." + endl; InfoLabel.Focus(); });
-                                    cards[cardType].cards[cardNumber].uses--;
-                                    players[zachroniony].zachronionyKatym = true;
-                                    players[ofiara].ofiaraKata = true;
-                                }
-                            }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //luneta - 32
-                    else if (nightPhase == 24)
-                    {
-                        int cardType = (int)cardTypeNumber.luneta;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if ((numOfNight + 1) % 3 == 0 && cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            if (players[player].wake)
-                            {
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[55, lang] + endl; InfoLabel.Focus(); });
-                                int zmiana1, zmiana2, pomoc;
-                                int iloscGraczowKierziSeObudzili = wakedPlayers.Count;
-                                for (int i = 0; i < 50000; i++)
-                                {
-                                    zmiana1 = rnd.Next(iloscGraczowKierziSeObudzili);
-                                    zmiana2 = rnd.Next(iloscGraczowKierziSeObudzili);
-                                    if (zmiana1 != zmiana2)
-                                    {
-                                        pomoc = wakedPlayers[zmiana1];
-                                        wakedPlayers[zmiana1] = wakedPlayers[zmiana2];
-                                        wakedPlayers[zmiana2] = pomoc;
-                                        pomoc = wakedPlayers[zmiana1];
-                                        wakedPlayers[zmiana1] = wakedPlayers[zmiana2];
-                                        wakedPlayers[zmiana2] = pomoc;
-                                    }
-                                }
-                                for (int i = 0; i < iloscGraczowKierziSeObudzili; i++)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[56, lang] + players[wakedPlayers[i]].name + "." + endl; InfoLabel.Focus(); });
-                                }
-                                wants2(text[57, lang]);
-                                if (endNight) { nightPhase = 25; return 0; }
-                                if (undo) { return 2; }
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //strzilani + koniec nocy
-                    else if (nightPhase == 25)
-                    {
-                        // normal shots
-                        List<Shot> shotsToRemove = new List<Shot>();
-                        foreach (Shot shot in shots)
-                        {
-                            if (shot.type == 0)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += shot.textInfo2RTB;
-                                });
-                                resetBullet();
-                                if (players[shot.target].alive)
-                                {
-                                    shoot(shot.target, shot.from, shot.mafia, shot.reportNumber, shot.first, shot.sniper);
-                                }
-                                else
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[shot.target].name + text[58, lang] + endl; InfoLabel.Focus(); });
-                                    report[shot.reportNumber] = text[59, lang];
-                                }
-                                shotsToRemove.Add(shot);
-                            }
-                        }
-                        //odbjyrani normalnych kulek z listy kulek, kiere majom byc wysrzelone
-                        foreach (Shot shot in shotsToRemove)
-                        {
-                            shots.Remove(shot);
-                        }
-                        shotsToRemove.Clear();
-                        // matrix shots initializing
-                        if (matrix)
-                        {
-                            int cardType = (int)cardTypeNumber.matrix;
-                            int cardNumber = 0;
-                            string name = nameOfCard(cardType, cardNumber);
-                            int player = cards[cardType].cards[cardNumber].player;
-                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[60, lang] + matrixBullets + "." + endl; InfoLabel.Focus(); });
-                            report[8] = text[61, lang] + matrixBullets + ".";
-                            if (matrixBullets > 0)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            }
-                            for (int i = 0; i < matrixBullets; i++)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[45, lang]; });
-                                clickPlayer(player, "", false, cardType);
-                                if (undo) { return 2; }
-                                report[9 + i] = text[62, lang] + (i + 1) + ", ";
-                                Shot shot = new Shot();
-                                shot.type = 1;
-                                shot.target = clickedPlayer; shot.from = player; shot.bulletNumber = i;
-                                shot.textInfo2RTB = ">>> " + text[63, lang] + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                shots.Add(shot);
-                                if (matrixBullets - i - 1 > 0)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[64, lang] + (matrixBullets - i - 1) + "." + endl; InfoLabel.Focus(); });
-                                }
-                            }
-                            matrix = false;
-                        }
-                        foreach (Shot shot in shots)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                Info2RTB.Text += shot.textInfo2RTB;
-                            });
-                            if (shot.type == 1)
-                            {
-                                resetBullet();
-                                if (players[shot.target].alive)
-                                {
-                                    matrixShoot(shot.target, shot.from, shot.bulletNumber);
-                                }
-                                else
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[shot.target].name + text[58, lang] + endl; InfoLabel.Focus(); });
-                                }
-                            }
-                            else if (shot.type == 2)
-                            {
-                                toxic(shot.targetRight, shot.targetLeft);
-                            }
-                        }
-                        shots.Clear();
-                        // kuskona
-                        int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                        if(playerWithKuskona != -1 && players[playerWithKuskona].alive && kuskonaZyskolMraka)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                Info2RTB.Text += text[65, lang] + ' ' + players[playerWithKuskona].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                            });
-                            report[27] += text[65, lang] + text[66, lang] + (nextMrakoszlap + 1) + ". ";
-                            players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                            players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKuskona, 1, true));
-                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                            nextMrakoszlap++;
-                        }
-                        // gandalf
-                        int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                        if (playerWithGandalf != -1 && players[playerWithGandalf].alive && gandalfZyskolMraka)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                Info2RTB.Text += text[67, lang] + ' ' + players[playerWithGandalf].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                            });
-                            report[26] += text[67, lang] + text[66, lang] + (nextMrakoszlap + 1) + ". ";
-                            players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                            players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGandalf, 1, true));
-                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                            nextMrakoszlap++;
-                        }
-                        // pijawica
-                        int playerWithPijavica = cards[(int)cardTypeNumber.pijavica].cards[0].player;
-                        if (playerWithPijavica != -1 && players[playerWithPijavica].alive)
-                        {
-                            for (int i = 0; i < pijawicaMrakoszlaps; i++)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += text[69, lang] + ' ' + players[playerWithPijavica].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[22] += text[69, lang] + text[68, lang] + (nextMrakoszlap + 1) + ". ";
-                                players[playerWithPijavica].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithPijavica].cardNumbers.Add(nextMrakoszlap);
-                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithPijavica, 1, true));
-                                cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                                nextMrakoszlap++;
-                            }
-                        }
-                        // kobra
-                        int playerWithKobra = cards[(int)cardTypeNumber.kobra].cards[0].player;
-                        if (playerWithKobra != -1 && players[playerWithKobra].alive)
-                        {
-                            if (players[playerWithPijavica].hasKobra)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += text[70, lang] + ' ' + players[playerWithKobra].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[23] = text[70, lang] + text[68, lang] + (nextMrakoszlap + 1) + text[71, lang];
-                                players[playerWithKobra].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithKobra].cardNumbers.Add(nextMrakoszlap);
-                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKobra, 1, true));
-                                cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                                nextMrakoszlap++;
-                                cards[(int)cardTypeNumber.pijavica].cards[0].uses--;
-                                cards[(int)cardTypeNumber.kobra].cards[0].uses--;
-                            }
-                        }
-                        // grabarz
-                        int playerWithGrabarz = cards[(int)cardTypeNumber.grabarz].cards[0].player;
-                        if (playerWithGrabarz != -1 && players[playerWithGrabarz].alive)
-                        {
-                            if (grabarz)
-                            {
-                                for (int i = 0; i < grabarzMrakoszlaps; i++)
-                                {
-                                    this.Invoke((MethodInvoker)delegate
-                                    {
-                                        Info2RTB.Text += text[72, lang] + ' ' + players[playerWithGrabarz].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                    });
-                                    report[24] += text[72, lang] + text[66, lang] + (nextMrakoszlap + 1) + ". ";
-                                    players[playerWithGrabarz].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                    players[playerWithGrabarz].cardNumbers.Add(nextMrakoszlap);
-                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGrabarz, 1, true));
-                                    cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                                    nextMrakoszlap++;
-                                }
-                            }
-                        }
-                        // sklenar
-                        int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                        if (playerWithSklenar != -1 && players[playerWithSklenar].alive)
-                        {
-                            if (sklenarMirrors.Count > 0 && !players[playerWithSklenar].cardTypes.Contains((int)cardTypeNumber.zwierciadlo))
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += text[74, lang] + ' ' + players[playerWithSklenar].name + text[73, lang] + (nextZwierciadlo + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[25] = text[74, lang] + text[73, lang] + (nextZwierciadlo + 1) + ".";
-                                players[playerWithSklenar].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
-                                players[playerWithSklenar].cardNumbers.Add(nextZwierciadlo);
-                                cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo, lang], playerWithSklenar, 1, true));
-                                cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
-                                nextZwierciadlo++;
-                            }
-                        }
-
-                        drawPlayersCardsRTB();
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            zapiszCoSeDzialoDoTxt();
-                            buttonStartNight.Enabled = true;
-                            buttonStartNight.Visible = true;
-                            buttonStartNight.Text = text[5, lang];
-                            yesButton.Enabled = false;
-                            yesButton.Visible = false;
-                            noButton.Enabled = false;
-                            noButton.Visible = false;
-                        });
-                        if (endNight)
-                        {
-                            return 1;
-                        }
-                        wants2("");
-                        report[0] = text[75, lang] + endl;
-                        if (undo) { return 1; }
-                        if (wantsUse)
-                        {
-                            return 1;
                         }
                     }
                 }
-                else
-                {
-                    //initializing + budzyni mafii na poczontku pjyrszej nocy
-                    if (nightPhase == 0)
-                    {
-                        //initializing
-                        initNight();
-
-                        //budzyni mafii na poczontku pjyrszej nocy
-                        if (numOfNight == 1)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[76, lang] + endl; InfoLabel.Focus(); });
-                            wants2(text[77, lang]);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo)
-                            {
-                                restoreGameState(gameStates.Count - 1);
-                                return 0;
-                            }
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                undoButton.Enabled = true;
-                                undoButton.Visible = true;
-                            });
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //grabarz - 33
-                    else if (nightPhase == 1)
-                    {
-                        int cardType = (int)cardTypeNumber.grabarz;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (wantsUse)
-                                {
-                                    grabarz = true;
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[12, lang] + endl; InfoLabel.Focus(); });
-                                    cards[cardType].cards[cardNumber].uses--;
-                                }
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //matrix - 4
-                    else if (nightPhase == 2)
-                    {
-                        int cardType = (int)cardTypeNumber.matrix;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (wantsUse)
-                                {
-                                    matrix = true;
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[13, lang] + endl; InfoLabel.Focus(); });
-                                    cards[cardType].cards[cardNumber].uses--;
-                                }
-                            }
-                            
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mag1 - 6
-                    else if (nightPhase == 3)
-                    {
-                        int cardType = (int)cardTypeNumber.mag;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            if (!wakedPlayers.Contains(player))
-                            {
-                                wakedPlayers.Add(player);
-                            }
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[14, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            tunel1 = clickedPlayer;
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[15, lang]; });
-                            clickPlayer(player, name, false, cardType);
-                            if (undo) { return 2; }
-                            tunel2 = clickedPlayer;
-                            if (players[player].wake)
-                            {
-                                addTunnel(tunel1, tunel2);
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mag2 - 6
-                    else if (nightPhase == 4)
-                    {
-                        int cardType = (int)cardTypeNumber.mag;
-                        int cardNumber = 1;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            if (!wakedPlayers.Contains(player))
-                            {
-                                wakedPlayers.Add(player);
-                            }
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[14, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            tunel1 = clickedPlayer;
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[15, lang]; });
-                            clickPlayer(player, name, false, cardType);
-                            if (undo) { return 2; }
-                            tunel2 = clickedPlayer;
-                            if (players[player].wake)
-                            {
-                                addTunnel(tunel1, tunel2);
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mag3 - 6
-                    else if (nightPhase == 5)
-                    {
-                        int cardType = (int)cardTypeNumber.mag;
-                        int cardNumber = 2;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            if (!wakedPlayers.Contains(player))
-                            {
-                                wakedPlayers.Add(player);
-                            }
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[14, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            tunel1 = clickedPlayer;
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[15, lang]; });
-                            clickPlayer(player, name, false, cardType);
-                            if (undo) { return 2; }
-                            tunel2 = clickedPlayer;
-                            if (players[player].wake)
-                            {
-                                addTunnel(tunel1, tunel2);
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //slina1 - 7
-                    else if (nightPhase == 6)
-                    {
-                        int cardType = (int)cardTypeNumber.slina;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[16, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                players[clickedPlayer].hasSlina = true;
-                                report[2] = text[17, lang] + players[clickedPlayer].name + ". ";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[17, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //slina2 - 7
-                    else if (nightPhase == 7)
-                    {
-                        int cardType = (int)cardTypeNumber.slina;
-                        int cardNumber = 1;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[16, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                players[clickedPlayer].hasSlina = true;
-                                report[2] += text[17, lang] + players[clickedPlayer].name + ".";
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[17, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //pijavica - 8
-                    else if (nightPhase == 8)
-                    {
-                        int cardType = (int)cardTypeNumber.pijavica;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[18, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                players[clickedPlayer].hasPijavica = true;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[19, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //piosek - 9
-                    else if (nightPhase == 9)
-                    {
-                        int cardType = (int)cardTypeNumber.piosek;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[20, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if ((cards[(int)cardTypeNumber.mag].numInGame >= 2 && cards[(int)cardTypeNumber.mag].cards[1].player == clickedPlayer) || (cards[(int)cardTypeNumber.szilenyStrzelec].numInGame >= 2 && cards[(int)cardTypeNumber.szilenyStrzelec].cards[1].player == clickedPlayer) || (cards[(int)cardTypeNumber.alCapone].numInGame >= 1 && cards[(int)cardTypeNumber.alCapone].cards[0].player == clickedPlayer))
-                                {
-                                    this.Invoke((MethodInvoker)delegate { report[3] = text[21, lang]; Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[22, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    players[clickedPlayer].hasPiosek = true;
-                                    report[3] = text[23, lang] + players[clickedPlayer].name + ".";
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[23, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //Duch Bobo - 13 - yny po tym co umrzil
-                    else if (nightPhase == 10)
-                    {
-                        int cardType = (int)cardTypeNumber.duchBobo;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && !players[player].alive && !duchBoboExhibowolPoUmrziciu)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[28, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 25; return 0; }
-                            if (undo) { return 2; }
-                            if (!wakedPlayers.Contains(player))
-                            {
-                                wakedPlayers.Add(player);
-                            }
-                            players[clickedPlayer].hasExhib = true;
-                            report[1] = text[30, lang] + players[clickedPlayer].name + ". ";
-                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[29, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            duchBoboExhibowolPoUmrziciu = true;
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //doktor - 35
-                    else if (nightPhase == 11)
-                    {
-                        int cardType = (int)cardTypeNumber.doktor;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            if ((numOfNight + 2 + posunyciDoktora) % 3 == 0)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[31, lang]; });
-                            }
-                            else
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[32, lang]; });
-                            }
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (cards[(int)cardTypeNumber.mafian].numInGame + 1 == numberOfAlivePlayers && (numOfNight + 2 + posunyciDoktora) % 3 != 0)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[33, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[34, lang] + endl; InfoLabel.Focus(); });
-                                    players[clickedPlayer].hasDoktor = true;
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //jozin z bazin - 36
-                    else if (nightPhase == 12)
-                    {
-                        int cardType = (int)cardTypeNumber.jozinZBazin;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            while (cards[cardType].cards[cardNumber].uses > 0 && wantsUse && players[player].wake)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[35, lang]; });
-                                clickPlayer(player, name, false, cardType);
-                                if (undo) { return 2; }
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[clickedPlayer].name + text[36, lang] + endl; InfoLabel.Focus(); });
-                                cards[cardType].cards[cardNumber].uses--;
-                                players[clickedPlayer].numberOfBloto++;
-
-                                if (cards[cardType].cards[cardNumber].uses > 0)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[37, lang] + name + text[38, lang] + endl; InfoLabel.Focus(); });
-                                    wants(player, name);
-                                    if (undo) { return 2; }
-                                }
-                            }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mafia1 - 14
-                    else if (nightPhase == 13)
-                    {
-                        int cardType = (int)cardTypeNumber.mafian;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[39, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (mafiaShoots == numberOfPlayers)
-                                {
-                                    mafiaShoots = clickedPlayer;
-                                }
-                                else if (mafiaShoots != numberOfPlayers && mafiaShoots != -1 && clickedPlayer != mafiaShoots)
-                                {
-                                    mafiaShoots = -1;
-                                }
-                                mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[41, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            else
-                            {
-                                mafiaShoots = -1;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[42, lang] + endl; InfoLabel.Focus(); });
-                            }
-                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
-                            {
-                                if (mafiaShoots == -1)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[43, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    Shot shot = new Shot();
-                                    shot.type = 0;
-                                    shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                    shots.Add(shot);
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mafia2 - 14
-                    else if (nightPhase == 14)
-                    {
-                        int cardType = (int)cardTypeNumber.mafian;
-                        int cardNumber = 1;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[39, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (mafiaShoots == numberOfPlayers)
-                                {
-                                    mafiaShoots = clickedPlayer;
-                                }
-                                else if (mafiaShoots != numberOfPlayers && mafiaShoots != -1 && clickedPlayer != mafiaShoots)
-                                {
-                                    mafiaShoots = -1;
-                                }
-                                mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[41, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            else
-                            {
-                                mafiaShoots = -1;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[42, lang] + endl; InfoLabel.Focus(); });
-                            }
-                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
-                            {
-                                if (mafiaShoots == -1)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[43, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    Shot shot = new Shot();
-                                    shot.type = 0;
-                                    shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                    shots.Add(shot);
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //mafia3 - 14
-                    else if (nightPhase == 15)
-                    {
-                        int cardType = (int)cardTypeNumber.mafian;
-                        int cardNumber = 2;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[39, lang]; });
-                            clickPlayer(player, name, true, cardType);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (mafiaShoots == numberOfPlayers)
-                                {
-                                    mafiaShoots = clickedPlayer;
-                                }
-                                else if (mafiaShoots != numberOfPlayers && mafiaShoots != -1 && clickedPlayer != mafiaShoots)
-                                {
-                                    mafiaShoots = -1;
-                                }
-                                mafiansAim++;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[41, lang] + players[clickedPlayer].name + "." + endl; InfoLabel.Focus(); });
-                            }
-                            else
-                            {
-                                mafiaShoots = -1;
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[42, lang] + endl; InfoLabel.Focus(); });
-                            }
-                            if (mafiansAim == cards[(int)cardTypeNumber.mafian].numInGame)
-                            {
-                                if (mafiaShoots == -1)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[43, lang] + endl; InfoLabel.Focus(); });
-                                }
-                                else
-                                {
-                                    Shot shot = new Shot();
-                                    shot.type = 0;
-                                    shot.target = clickedPlayer; shot.from = player; shot.mafia = true; shot.reportNumber = 4; shot.first = true; shot.sniper = false;
-                                    shot.textInfo2RTB = ">>> " + text[40, lang] + ' ' + (cardNumber + 1) + ' ' + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                    shots.Add(shot);
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //sniper - 16
-                    else if (nightPhase == 16)
-                    {
-                        int cardType = (int)cardTypeNumber.sniper;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            resetBullet();
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (wantsUse)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[45, lang]; });
-                                clickPlayer(player, name, false, cardType);
-                                if (undo) { return 2; }
-                                if (players[player].wake)
-                                {
-                                    cards[cardType].cards[cardNumber].uses--;
-                                    Shot shot = new Shot();
-                                    shot.type = 0;
-                                    shot.target = clickedPlayer; shot.from = player; shot.mafia = false; shot.reportNumber = 7; shot.first = true; shot.sniper = true;
-                                    shot.textInfo2RTB = ">>> " + text[47, lang] + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                    shots.Add(shot);
-                                }
-                            }
-                            if (players[player].wake && !wakedPlayers.Contains(player))
-                            {
-                                wakedPlayers.Add(player);
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //fusekla - 12
-                    else if (nightPhase == 17)
-                    {
-                        int cardType = (int)cardTypeNumber.fusekla;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            resetBullet();
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                                if (wantsUse)
-                                {
-                                    Shot shot = new Shot();
-                                    shot.type = 2;
-                                    shot.targetRight = rightPlayer(player);
-                                    shot.targetLeft = leftPlayer(player);
-                                    shot.textInfo2RTB = ">>> " + text[48, lang] + endl;
-                                    shots.Add(shot);
-                                    cards[cardType].cards[cardNumber].uses--;
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //slepy kat - 30
-                    else if (nightPhase == 18)
-                    {
-                        int cardType = (int)cardTypeNumber.slepyKat;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if (cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + text[11, lang] + endl; InfoLabel.Focus(); });
-                            wants(player, name);
-                            if (endNight) { nightPhase = 20; return 0; }
-                            if (undo) { return 2; }
-                            if (wantsUse)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[52, lang]; });
-                                clickPlayer(player, name, true, cardType);
-                                if (undo) { return 2; }
-                                zachroniony = clickedPlayer;
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[53, lang]; });
-                                clickPlayer(player, name, false, cardType);
-                                if (undo) { return 2; }
-                                ofiara = clickedPlayer;
-                                if (players[player].wake)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[8, lang] + ' ' + players[zachroniony].name + text[54, lang] + players[ofiara].name + "." + endl; InfoLabel.Focus(); });
-                                    cards[cardType].cards[cardNumber].uses--;
-                                    players[zachroniony].zachronionyKatym = true;
-                                    players[ofiara].ofiaraKata = true;
-                                }
-                            }
-                            if (players[player].wake)
-                            {
-                                if (!wakedPlayers.Contains(player))
-                                {
-                                    wakedPlayers.Add(player);
-                                }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //luneta - 32
-                    else if (nightPhase == 19)
-                    {
-                        int cardType = (int)cardTypeNumber.luneta;
-                        int cardNumber = 0;
-                        string name = nameOfCard(cardType, cardNumber);
-                        int player = cards[cardType].cards[cardNumber].player;
-                        if ((numOfNight + 1) % 3 == 0 && cards[cardType].cards[cardNumber].inGame && players[player].alive && cards[cardType].cards[cardNumber].uses > 0)
-                        {
-                            this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            if (players[player].wake)
-                            {
-                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[55, lang] + endl; InfoLabel.Focus(); });
-                                int zmiana1, zmiana2, pomoc;
-                                int iloscGraczowKierziSeObudzili = wakedPlayers.Count;
-                                for (int i = 0; i < 50000; i++)
-                                {
-                                    zmiana1 = rnd.Next(iloscGraczowKierziSeObudzili);
-                                    zmiana2 = rnd.Next(iloscGraczowKierziSeObudzili);
-                                    if (zmiana1 != zmiana2)
-                                    {
-                                        pomoc = wakedPlayers[zmiana1];
-                                        wakedPlayers[zmiana1] = wakedPlayers[zmiana2];
-                                        wakedPlayers[zmiana2] = pomoc;
-                                        pomoc = wakedPlayers[zmiana1];
-                                        wakedPlayers[zmiana1] = wakedPlayers[zmiana2];
-                                        wakedPlayers[zmiana2] = pomoc;
-                                    }
-                                }
-                                for (int i = 0; i < iloscGraczowKierziSeObudzili; i++)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[56, lang] + players[wakedPlayers[i]].name + "." + endl; InfoLabel.Focus(); });
-                                }
-                                wants2(text[57, lang]);
-                                if (endNight) { nightPhase = 20; return 0; }
-                                if (undo) { return 2; }
-                            }
-                        }
-                        if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
-                        return 0;
-                    }
-                    //strzilani + koniec nocy
-                    else if (nightPhase == 20)
-                    {
-                        // normal shots
-                        List<Shot> shotsToRemove = new List<Shot>();
-                        foreach (Shot shot in shots)
-                        {
-                            if (shot.type == 0)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += shot.textInfo2RTB;
-                                });
-                                resetBullet();
-                                if (players[shot.target].alive)
-                                {
-                                    shoot(shot.target, shot.from, shot.mafia, shot.reportNumber, shot.first, shot.sniper);
-                                }
-                                else
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[shot.target].name + text[58, lang] + endl; InfoLabel.Focus(); });
-                                    report[shot.reportNumber] = text[59, lang];
-                                }
-                                shotsToRemove.Add(shot);
-                            }
-                        }
-                        foreach (Shot shot in shotsToRemove)
-                        {
-                            shots.Remove(shot);
-                        }
-                        shotsToRemove.Clear();
-                        // matrix shots initializing
-                        if (matrix)
-                        {
-                            int cardType = (int)cardTypeNumber.matrix;
-                            int cardNumber = 0;
-                            string name = nameOfCard(cardType, cardNumber);
-                            int player = cards[cardType].cards[cardNumber].player;
-                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[60, lang] + matrixBullets + "." + endl; InfoLabel.Focus(); });
-                            report[8] = text[61, lang] + matrixBullets + ".";
-                            if (matrixBullets > 0)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[10, lang] + name + '.' + endl; InfoLabel.Focus(); });
-                            }
-                            for (int i = 0; i < matrixBullets; i++)
-                            {
-                                this.Invoke((MethodInvoker)delegate { InfoLabel.Text = text[45, lang]; });
-                                clickPlayer(player, "", false, cardType);
-                                if (undo) { return 2; }
-                                report[9 + i] = text[62, lang] + (i + 1) + ", ";
-                                Shot shot = new Shot();
-                                shot.type = 1;
-                                shot.target = clickedPlayer; shot.from = player; shot.bulletNumber = i;
-                                shot.textInfo2RTB = ">>> " + text[63, lang] + players[player].name + text[44, lang] + players[clickedPlayer].name + "." + endl;
-                                shots.Add(shot);
-                                if (matrixBullets - i - 1 > 0)
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[64, lang] + (matrixBullets - i - 1) + "." + endl; InfoLabel.Focus(); });
-                                }
-                            }
-                            matrix = false;
-                        }
-                        // matrix shots and fusekla
-                        foreach (Shot shot in shots)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                Info2RTB.Text += shot.textInfo2RTB;
-                            });
-                            if (shot.type == 1)
-                            {
-                                resetBullet();
-                                if (players[shot.target].alive)
-                                {
-                                    matrixShoot(shot.target, shot.from, shot.bulletNumber);
-                                }
-                                else
-                                {
-                                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[shot.target].name + text[58, lang] + endl; InfoLabel.Focus(); });
-                                }
-                            }
-                            else if (shot.type == 2)
-                            {
-                                toxic(shot.targetRight, shot.targetLeft);
-                            }
-                        }
-                        shots.Clear();
-                        // kuskona
-                        int playerWithKuskona = cards[(int)cardTypeNumber.kusKona].cards[0].player;
-                        if (playerWithKuskona != -1 && players[playerWithKuskona].alive && kuskonaZyskolMraka)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                Info2RTB.Text += text[65, lang] + ' ' + players[playerWithKuskona].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                            });
-                            report[27] += text[65, lang] + text[66, lang] + (nextMrakoszlap + 1) + ". ";
-                            players[playerWithKuskona].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                            players[playerWithKuskona].cardNumbers.Add(nextMrakoszlap);
-                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKuskona, 1, true));
-                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                            nextMrakoszlap++;
-                        }
-                        // gandalf
-                        int playerWithGandalf = cards[(int)cardTypeNumber.gandalf].cards[0].player;
-                        if (playerWithGandalf != -1 && players[playerWithGandalf].alive && gandalfZyskolMraka)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                Info2RTB.Text += text[67, lang] + ' ' + players[playerWithGandalf].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                            });
-                            report[26] += text[67, lang] + text[66, lang] + (nextMrakoszlap + 1) + ". ";
-                            players[playerWithGandalf].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                            players[playerWithGandalf].cardNumbers.Add(nextMrakoszlap);
-                            cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGandalf, 1, true));
-                            cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                            nextMrakoszlap++;
-                        }
-                        // pijawica
-                        int playerWithPijavica = cards[(int)cardTypeNumber.pijavica].cards[0].player;
-                        if (playerWithPijavica != -1 && players[playerWithPijavica].alive)
-                        {
-                            for (int i = 0; i < pijawicaMrakoszlaps; i++)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += text[69, lang] + ' ' + players[playerWithPijavica].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[22] += text[69, lang] + text[68, lang] + (nextMrakoszlap + 1) + ". ";
-                                players[playerWithPijavica].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithPijavica].cardNumbers.Add(nextMrakoszlap);
-                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithPijavica, 1, true));
-                                cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                                nextMrakoszlap++;
-                            }
-                        }
-                        // kobra
-                        int playerWithKobra = cards[(int)cardTypeNumber.kobra].cards[0].player;
-                        if (playerWithKobra != -1 && players[playerWithKobra].alive)
-                        {
-                            if (players[playerWithPijavica].hasKobra)
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += text[70, lang] + ' ' + players[playerWithKobra].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[23] = text[70, lang] + text[68, lang] + (nextMrakoszlap + 1) + text[71, lang];
-                                players[playerWithKobra].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                players[playerWithKobra].cardNumbers.Add(nextMrakoszlap);
-                                cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithKobra, 1, true));
-                                cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                                nextMrakoszlap++;
-                                cards[(int)cardTypeNumber.pijavica].cards[0].uses--;
-                                cards[(int)cardTypeNumber.kobra].cards[0].uses--;
-                            }
-                        }
-                        // grabarz
-                        int playerWithGrabarz = cards[(int)cardTypeNumber.grabarz].cards[0].player;
-                        if (playerWithGrabarz != -1 && players[playerWithGrabarz].alive)
-                        {
-                            if (grabarz)
-                            {
-                                for (int i = 0; i < grabarzMrakoszlaps; i++)
-                                {
-                                    this.Invoke((MethodInvoker)delegate
-                                    {
-                                        Info2RTB.Text += text[72, lang] + ' ' + players[playerWithGrabarz].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                    });
-                                    report[24] += text[72, lang] + text[66, lang] + (nextMrakoszlap + 1) + ". ";
-                                    players[playerWithGrabarz].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                    players[playerWithGrabarz].cardNumbers.Add(nextMrakoszlap);
-                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], playerWithGrabarz, 1, true));
-                                    cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                                    nextMrakoszlap++;
-                                }
-                            }
-                        }
-                        // sklenar
-                        int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                        if (playerWithSklenar != -1 && players[playerWithSklenar].alive)
-                        {
-                            if (sklenarMirrors.Count > 0 && !players[playerWithSklenar].cardTypes.Contains((int)cardTypeNumber.zwierciadlo))
-                            {
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    Info2RTB.Text += text[74, lang] + ' ' + players[playerWithSklenar].name + text[73, lang] + (nextZwierciadlo + 1) + "." + endl; InfoLabel.Focus();
-                                });
-                                report[25] = text[74, lang] + text[73, lang] + (nextZwierciadlo + 1) + ".";
-                                players[playerWithSklenar].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
-                                players[playerWithSklenar].cardNumbers.Add(nextZwierciadlo);
-                                cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo, lang], playerWithSklenar, 1, true));
-                                cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
-                                nextZwierciadlo++;
-                            }
-                        }
-
-                        drawPlayersCardsRTB();
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            zapiszCoSeDzialoDoTxt();
-                            buttonStartNight.Enabled = true;
-                            buttonStartNight.Visible = true;
-                            buttonStartNight.Text = text[5, lang];
-                            yesButton.Enabled = false;
-                            yesButton.Visible = false;
-                            noButton.Enabled = false;
-                            noButton.Visible = false;
-                        });
-                        if (endNight)
-                        {
-                            return 1;
-                        }
-                        wants2("");
-                        report[0] = text[75, lang] + endl;
-                        if (undo || wantsUse)
-                        {
-                            return 1;
-                        }
-                    }
-                }
+                if (!undo) { nightPhase++; } else { restoreGameState(gameStates.Count - 2); }
+                return 0;
             }
             catch (Exception exception1)
             {
@@ -3681,6 +2458,8 @@ namespace Mafia
                 state.removeCardComboboxVisible = removeCardCombobox.Visible;
                 state.undoButtonEnabled = undoButton.Enabled;
                 state.undoButtonVisible = undoButton.Visible;
+                state.bombButtonEnabled = bombButton.Enabled;
+                state.bombButtonVisible = bombButton.Visible;
                 state.PlayersCardsRichTextBoxText = PlayersCardsRichTextBox.Text;
             });
 
@@ -3778,6 +2557,8 @@ namespace Mafia
                 removeCardCombobox.Visible = state.removeCardComboboxVisible;
                 undoButton.Enabled = state.undoButtonEnabled;
                 undoButton.Visible = state.undoButtonVisible;
+                bombButton.Enabled = state.bombButtonEnabled;
+                bombButton.Visible = state.bombButtonVisible;
                 PlayersCardsRichTextBox.Text = state.PlayersCardsRichTextBoxText;
             });
             if (gameStates.Count >= 2)
