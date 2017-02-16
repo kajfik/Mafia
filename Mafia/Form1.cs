@@ -111,6 +111,47 @@ namespace Mafia
             {"jozin z bazin", "jožin z bažin"}
         };
 
+        int[] cardNightPhases = new int[numOfSpecificCards]
+        {
+             -1, //mrakoszlap,
+             -1, //imunita
+             -1, //prowazochodec
+             -1, //neprustrzelno westa
+             2,  //matrix,
+             0,  //jailer,
+             3,  //mag,
+             6,  //slina,
+             8,  //pijavica,
+             9,  //piosek,
+             10, //kobra,
+             11, //magnet,
+             21, //fusekla,
+             12, //duchBobo,
+             15, //mafian,
+             18, //szilenyStrzelec
+             20, //sniper,
+             -1, //zwierciadlo
+             -1, //terorista,
+             -1, //astronom,
+             -1, //meciar,
+             -1, //kovac,
+             -1, //alCapone,
+             -1, //gandalf,
+             -1, //kusKona,
+             -1, //ateista,
+             -1, //anarchista,
+             -1, //sklenar,
+             -1, //masowyWrah,
+             22, //soudce,
+             23, //slepyKat,
+             -1, //komunista,
+             24, //luneta,
+             1,  //grabarz,
+             -1, //panCzasu,
+             13, //doktor,
+             14  //jozinZBazin
+        };
+
         /*
          * cards:
          * 0 - mrakoszlap - 7x
@@ -203,7 +244,7 @@ namespace Mafia
         [Serializable]public class gameState
         {
             public Cards[] cards;
-            public int[,] tunnels = new int[3, 2];
+            public Tunnel[] tunnels;
             public string[] report;
             public int numberOfTunnels;
             public int numberOfAlivePlayers;
@@ -292,7 +333,13 @@ namespace Mafia
             public List<Card> cards;
             public int numInGame;
         }
-        
+
+        [Serializable]public struct Tunnel
+        {
+            public int from;
+            public int to;
+        }
+
         // global variables
         //to ensure that bullets are fired on the end of the night
         public List<Shot> shots = new List<Shot>();
@@ -304,7 +351,7 @@ namespace Mafia
         int height = 500;
         const int circleDiameter = 38;
         int[,] pictureBoxArray;
-        int[,] tunnels = new int[3,2];
+        Tunnel[] tunnels = new Tunnel[3];
         int numberOfTunnels;
         int numberOfPlayers;
         int numberOfAlivePlayers;
@@ -1279,7 +1326,7 @@ namespace Mafia
                 gandalfZyskolMraka = false;
                 for (int i = 0; i < 3; i++)
                 {
-                    tunnels[i, 0] = -1;
+                    tunnels[i].from = -1;
                 }
                 string raport = "";
                 for (int i = 0; i < numberOfReports; i++)
@@ -1350,6 +1397,7 @@ namespace Mafia
                     drawPlayers();
                     zapiszCoSeDzialoDoTxt();
                 });
+
                 if (evenNight)
                 {
                     //initializing + jailer - 5
@@ -3443,7 +3491,7 @@ namespace Mafia
                 report[0] = text[75, lang] + endl;
                 for (int i = 0; i < 3; i++)
                 {
-                    tunnels[i, 0] = -1;
+                    tunnels[i].from = -1;
                 }
                 resetBullet();
                 numberOfTunnels = 0;
@@ -5208,7 +5256,7 @@ namespace Mafia
                 //nie idzie zrobic dwa razy tyn som tunel
                 for (int i = 0; i < numberOfTunnels && add; i++)
                 {
-                    if (tunnels[i, 0] == p1 && tunnels[i, 1] == p2)
+                    if (tunnels[i].from == p1 && tunnels[i].to == p2)
                     {
                         add = false;
                         this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[139, lang] + players[p1].name + ", " + players[p2].name + text[140, lang] + endl; InfoLabel.Focus(); });
@@ -5228,8 +5276,8 @@ namespace Mafia
                     t[1] = numberOfTunnels;
                     players[p1].tunnels.Add(t);
                     players[p1].tunnelsFrom++;
-                    tunnels[numberOfTunnels, 0] = p1;
-                    tunnels[numberOfTunnels, 1] = p2;
+                    tunnels[numberOfTunnels].from = p1;
+                    tunnels[numberOfTunnels].to = p2;
                     numberOfTunnels++;
                     this.Invoke((MethodInvoker)delegate { Info2RTB.Text += ">>> " + text[143, lang] + players[p1].name + text[91, lang] + players[p2].name + "." + endl; InfoLabel.Focus(); });
                 }
@@ -5240,29 +5288,29 @@ namespace Mafia
             }
         }
 
-        public void drawTunnel(int p1, int p2, int t)
+        public void drawTunnel(int from, int to, int tunnel)
         {
             try
             {
                 Pen pen = new Pen(Brushes.White);
-                if (t == 0)
+                if (tunnel == 0)
                 {
                     pen.Color = Color.LightSkyBlue;
                 }
-                else if (t == 1)
+                else if (tunnel == 1)
                 {
                     pen.Color = Color.LightGreen;
                 }
-                else if (t == 2)
+                else if (tunnel == 2)
                 {
                     pen.Color = Color.LightSalmon;
                 }
 
                 pen.Width = 16;
-                int x1 = players[p1].position[0];
-                int y1 = players[p1].position[1];
-                int x2 = players[p2].position[0];
-                int y2 = players[p2].position[1];
+                int x1 = players[from].position[0];
+                int y1 = players[from].position[1];
+                int x2 = players[to].position[0];
+                int y2 = players[to].position[1];
                 //g.DrawLine(pen, x1, y1, x2, y2);
 
                 double distx = x2 - x1;
@@ -5294,9 +5342,9 @@ namespace Mafia
             {
                 for (int i = 0; i < numberOfTunnels; i++)
                 {
-                    if (tunnels[i, 0] != -1 && players[tunnels[i, 0]].alive && players[tunnels[i, 1]].alive)
+                    if (tunnels[i].from != -1 && players[tunnels[i].from].alive && players[tunnels[i].to].alive)
                     {
-                        drawTunnel(tunnels[i, 0], tunnels[i, 1], i);
+                        drawTunnel(tunnels[i].from, tunnels[i].to, i);
                     }
                 }
             }
