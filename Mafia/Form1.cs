@@ -2726,7 +2726,7 @@ namespace Mafia
                 }
                 for (int i = 0; i < players[target].tunnelsFrom; i++)
                 {
-                    if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] || rozszczep > 1)
+                    if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] || (rozszczep > 1 && first))
                     {
                         if (rozszczep > 1)
                         {
