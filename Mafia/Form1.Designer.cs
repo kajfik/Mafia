@@ -50,8 +50,11 @@
             this.undoButton = new System.Windows.Forms.Button();
             this.comboBoxLanguage = new System.Windows.Forms.ComboBox();
             this.bombButton = new System.Windows.Forms.Button();
+            this.speedTrackBar = new System.Windows.Forms.TrackBar();
+            this.speedLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numOfPlayersNumericUpDown)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.speedTrackBar)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -299,11 +302,32 @@
             this.bombButton.UseVisualStyleBackColor = true;
             this.bombButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.bombButton_MouseDown);
             // 
+            // speedTrackBar
+            // 
+            this.speedTrackBar.Location = new System.Drawing.Point(1148, 15);
+            this.speedTrackBar.Maximum = 1000;
+            this.speedTrackBar.Name = "speedTrackBar";
+            this.speedTrackBar.Size = new System.Drawing.Size(158, 45);
+            this.speedTrackBar.TabIndex = 27;
+            this.speedTrackBar.Value = 50;
+            this.speedTrackBar.Scroll += new System.EventHandler(this.speedTrackBar_Scroll);
+            // 
+            // speedLabel
+            // 
+            this.speedLabel.AutoSize = true;
+            this.speedLabel.Location = new System.Drawing.Point(1156, 47);
+            this.speedLabel.Name = "speedLabel";
+            this.speedLabel.Size = new System.Drawing.Size(96, 13);
+            this.speedLabel.TabIndex = 28;
+            this.speedLabel.Text = "Czas pocisków: 50";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1362, 712);
+            this.Controls.Add(this.speedLabel);
+            this.Controls.Add(this.speedTrackBar);
             this.Controls.Add(this.bombButton);
             this.Controls.Add(this.comboBoxLanguage);
             this.Controls.Add(this.undoButton);
@@ -334,6 +358,7 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numOfPlayersNumericUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.speedTrackBar)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -363,6 +388,8 @@
         private System.Windows.Forms.Button undoButton;
         private System.Windows.Forms.ComboBox comboBoxLanguage;
         private System.Windows.Forms.Button bombButton;
+        private System.Windows.Forms.TrackBar speedTrackBar;
+        private System.Windows.Forms.Label speedLabel;
     }
 }
 

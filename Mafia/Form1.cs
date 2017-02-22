@@ -215,7 +215,7 @@ namespace Mafia
             public bool zachronionyKatym;
             public int tunnelsFrom;
             public int numberOfBloto;
-            public List<int[]> tunnels;
+            public List<Tunnel> tunnels;
         }
 
         [Serializable]public class Bullet
@@ -312,6 +312,9 @@ namespace Mafia
             public bool bombButtonVisible;
             public string PlayersCardsRichTextBoxText;
             public int starterThread;
+            public bool speedLabelVisible;
+            public bool speedTrackBarEnabled;
+            public bool speedTrackBarVisible;
         }
         
         [Serializable]public class Card
@@ -340,6 +343,7 @@ namespace Mafia
         {
             public int from;
             public int to;
+            public int numOfTunnel;
         }
 
         // global variables
@@ -483,6 +487,7 @@ namespace Mafia
         Image ofiaraImage = Image.FromFile(".\\icons\\ofiara.png");
         Image zachronionyImage = Image.FromFile(".\\icons\\zachroniony.png");
         int lang;
+        Font font = new Font(FontFamily.GenericMonospace, 10, FontStyle.Bold);
         readonly string[,] text =
         {
             /*  0 */{"Nazwa", "Jméno" },
@@ -636,7 +641,9 @@ namespace Mafia
             /* 147 */{"Był przegłosowany", "Byl přehlasován" },
             /* 148 */{"Dodaj kartę", "Přidej kartu" },
             /* 149 */{"Odbierz kartę", "Odeber kartu" },
-            /* 150 */{"Bómba", "Bomba" }
+            /* 150 */{"Bómba", "Bomba" },
+            /* 151 */{". ułamek przelecioł tunelym", ". část přeletěla tunelem" },
+            /* 152 */{"Czas pocisków: ", "Čas kulek: " },
         };
         
         // functions for initializing stuff
@@ -690,6 +697,9 @@ namespace Mafia
                 numOfPlayersNumericUpDown.Visible = false;
                 bombButton.Enabled = false;
                 bombButton.Visible = false;
+                speedLabel.Visible = false;
+                speedTrackBar.Enabled = false;
+                speedTrackBar.Visible = false;
                 labelStartPhase.Text = "Please select a language:";
                 comboBoxLanguage.SelectedIndex = 0;
                 this.AcceptButton = buttonStartPhase;
@@ -753,6 +763,7 @@ namespace Mafia
                     addCardButton.Text = text[148, lang];
                     removeCardButton.Text = text[149, lang];
                     bombButton.Text = text[150, lang];
+                    speedLabel.Text = text[152, lang] + speedTrackBar.Value;
                     startPhase = 1;
                 }
                 // setting num of players
@@ -765,7 +776,7 @@ namespace Mafia
                     for (int i = 0; i < numberOfPlayers; i++)
                     {
                         players[i] = new Player();
-                        players[i].tunnels = new List<int[]>();
+                        players[i].tunnels = new List<Tunnel>();
                     }
                     numOfPlayersNumericUpDown.Enabled = false;
                     numOfPlayersNumericUpDown.Visible = false;
@@ -856,6 +867,9 @@ namespace Mafia
                     InfoLabel.Visible = true;
                     shotButton.Enabled = true;
                     shotButton.Visible = true;
+                    speedLabel.Visible = true;
+                    speedTrackBar.Enabled = true;
+                    speedTrackBar.Visible = true;
                     thread2.Start();
                 }
             }
@@ -1438,7 +1452,15 @@ namespace Mafia
                     {
                         this.Invoke((MethodInvoker)delegate { InfoRTB.Text += text[76, lang] + endl; InfoLabel.Focus(); });
                         wants2(text[77, lang]);
-                        if (endNight) { nightPhase = 25; return 0; }
+                        if (endNight)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                undoButton.Enabled = true;
+                                undoButton.Visible = true;
+                            });
+                            nightPhase = 25; return 0;
+                        }
                         if (undo)
                         {
                             restoreGameState(gameStates.Count - 1);
@@ -1833,8 +1855,8 @@ namespace Mafia
                             {
                                 Shot shot = new Shot();
                                 shot.type = 2;
-                                shot.targetRight = rightPlayer(player);
-                                shot.targetLeft = leftPlayer(player);
+                                shot.targetRight = getRightPlayer(player);
+                                shot.targetLeft = getLeftPlayer(player);
                                 shot.textInfo2RTB = ">>> " + text[48, lang] + endl;
                                 shots.Add(shot);
                                 cards[cardType].cards[cardNumber].uses--;
@@ -2292,6 +2314,9 @@ namespace Mafia
                     yesButton.Visible = false;
                     noButton.Enabled = false;
                     noButton.Visible = false;
+                    speedLabel.Visible = false;
+                    speedTrackBar.Enabled = false;
+                    speedTrackBar.Visible = false;
                     InfoRTB.Text = raport;
                     InfoLabel.Focus();
                     votedButton.Enabled = true;
@@ -2359,6 +2384,9 @@ namespace Mafia
                         yesButton.Visible = true;
                         noButton.Enabled = true;
                         noButton.Visible = true;
+                        speedLabel.Visible = true;
+                        speedTrackBar.Enabled = true;
+                        speedTrackBar.Visible = true;
                         bombButton.Enabled = false;
                         bombButton.Visible = false;
                     });
@@ -2461,6 +2489,9 @@ namespace Mafia
                 state.bombButtonEnabled = bombButton.Enabled;
                 state.bombButtonVisible = bombButton.Visible;
                 state.PlayersCardsRichTextBoxText = PlayersCardsRichTextBox.Text;
+                state.speedLabelVisible = speedLabel.Visible;
+                state.speedTrackBarEnabled = speedTrackBar.Enabled;
+                state.speedTrackBarVisible = speedTrackBar.Visible;
             });
 
             gameStates.Add(DeepClone(state));
@@ -2560,6 +2591,9 @@ namespace Mafia
                 bombButton.Enabled = state.bombButtonEnabled;
                 bombButton.Visible = state.bombButtonVisible;
                 PlayersCardsRichTextBox.Text = state.PlayersCardsRichTextBoxText;
+                speedLabel.Visible = state.speedLabelVisible;
+                speedTrackBar.Enabled = state.speedTrackBarEnabled;
+                speedTrackBar.Visible = state.speedTrackBarVisible;
             });
             if (gameStates.Count >= 2)
             {
@@ -2608,33 +2642,8 @@ namespace Mafia
             }
             bullet.trajectory.Add(target);
             //initializing left and right player, checking if tunnels arent made to dead players (same with magnets)
-            int leftPlayer = -1; int rightPlayer = -1;
-            int p = target;
-            for (int i = 0; i < numberOfPlayers && rightPlayer == -1; i++)
-            {
-                p++;
-                if (p == numberOfPlayers)
-                {
-                    p = 0;
-                }
-                if (players[p].alive && p != target)
-                {
-                    rightPlayer = p;
-                }
-            }
-            p = target;
-            for (int i = 0; i < numberOfPlayers && leftPlayer == -1; i++)
-            {
-                p--;
-                if (p < 0)
-                {
-                    p = numberOfPlayers - 1;
-                }
-                if (players[p].alive && p != target)
-                {
-                    leftPlayer = p;
-                }
-            }
+            int leftPlayer = getLeftPlayer(target);
+            int rightPlayer = getRightPlayer(target);
             bool useTunnel = false;
             int rozszczep = -1;
             if (players[target].tunnelsFrom > 0)
@@ -2642,9 +2651,9 @@ namespace Mafia
                 int t = 0;
                 for (int i = 0; i < players[target].tunnelsFrom; i++)
                 {
-                    if (!bullet.usedTunnel[players[target].tunnels[i][1]])
+                    if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel])
                     {
-                        if (players[players[target].tunnels[i][0]].alive)
+                        if (players[players[target].tunnels[i].to].alive)
                         {
                             t++;
                         }
@@ -2708,27 +2717,41 @@ namespace Mafia
             //tunel
             else if (useTunnel)
             {
+                if (rozszczep > 1)
+                {
+                    for (int i = 0; i < players[target].tunnelsFrom; i++)
+                    {
+                        bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] = true;
+                    }
+                }
                 for (int i = 0; i < players[target].tunnelsFrom; i++)
                 {
-                    if (!bullet.usedTunnel[players[target].tunnels[i][1]] && players[players[target].tunnels[i][0]].alive)
+                    if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] || rozszczep > 1)
                     {
-                        if (rozszczep > 1 && i == 0)
+                        if (rozszczep > 1)
                         {
-                            report[reportNumber] += text[87, lang] + rozszczep + text[88, lang];
+                            if (i == 0)
+                            {
+                                report[reportNumber] += text[87, lang] + rozszczep + text[88, lang];
+                            }
+                            report[reportNumber] += ", " + (i + 1) + text[151, lang];
                         }
-                        this.Invoke((MethodInvoker)delegate
+                        if (players[players[target].tunnels[i].to].alive)
                         {
-                            Info2RTB.Text += text[89, lang] + (players[target].tunnels[i][1] + 1) + text[90, lang] + players[target].name + text[91, lang] + players[players[target].tunnels[i][0]].name + "." + endl; InfoLabel.Focus();
-                        });
-                        report[reportNumber] += text[92, lang];
-                        bullet.usedTunnel[players[target].tunnels[i][1]] = true;
-                        if (players[players[target].tunnels[i][0]].alive)
-                        {
-                            shoot(players[target].tunnels[i][0], target, mafia, reportNumber, false, sniper);
+                            if (rozszczep == 1)
+                            {
+                                report[reportNumber] += text[92, lang];
+                            }
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                Info2RTB.Text += text[89, lang] + (players[target].tunnels[i].numOfTunnel + 1) + text[90, lang] + players[target].name + text[91, lang] + players[players[target].tunnels[i].to].name + "." + endl; InfoLabel.Focus();
+                            });
+                            bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] = true;
+                            shoot(players[target].tunnels[i].to, target, mafia, reportNumber, false, sniper);
                         }
-                        else
+                        else if (i == 0 || rozszczep > 1)
                         {
-                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[players[target].tunnels[i][0]].name + text[58, lang] + endl; InfoLabel.Focus(); });
+                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[players[target].tunnels[i].to].name + text[58, lang] + endl; InfoLabel.Focus(); });
                             report[reportNumber] += text[86, lang];
                         }
                     }
@@ -3880,6 +3903,11 @@ namespace Mafia
             }
         }
 
+        private void speedTrackBar_Scroll(object sender, EventArgs e)
+        {
+            speedLabel.Text = text[152, lang] + speedTrackBar.Value;
+        }
+
         // functions for logging stuff into txt
 
         public void zapiszRozdaneKartyDoTxt()
@@ -3969,7 +3997,7 @@ namespace Mafia
             }
         }
 
-        public int leftPlayer(int player)
+        public int getLeftPlayer(int player)
         {
             int leftPlayer = -1;
             int p = player;
@@ -3988,7 +4016,7 @@ namespace Mafia
             return leftPlayer;
         }
 
-        public int rightPlayer(int player)
+        public int getRightPlayer(int player)
         {
             int rightPlayer = -1;
             int p = player;
@@ -4052,9 +4080,10 @@ namespace Mafia
                 if (add)
                 {
                     players[p1].tunnelFrom = true;
-                    int[] t = new int[2];
-                    t[0] = p2;
-                    t[1] = numberOfTunnels;
+                    Tunnel t = new Tunnel();
+                    t.from = p1;
+                    t.to = p2;
+                    t.numOfTunnel = numberOfTunnels;
                     players[p1].tunnels.Add(t);
                     players[p1].tunnelsFrom++;
                     tunnels[numberOfTunnels].from = p1;
@@ -4074,6 +4103,7 @@ namespace Mafia
             try
             {
                 Pen pen = new Pen(Brushes.White);
+                pen.Width = 16;
                 if (tunnel == 0)
                 {
                     pen.Color = Color.LightSkyBlue;
@@ -4086,8 +4116,7 @@ namespace Mafia
                 {
                     pen.Color = Color.LightSalmon;
                 }
-
-                pen.Width = 16;
+                
                 int x1 = players[from].position[0];
                 int y1 = players[from].position[1];
                 int x2 = players[to].position[0];
@@ -4163,7 +4192,7 @@ namespace Mafia
                         g.DrawLine(pen, x2, y2, x4, y4);
                         pictureBox1.Image = bmp;
                         pictureBox1.Update();
-                        Thread.Sleep(50);
+                        Thread.Sleep(speedTrackBar.Value);
                     }
                 }
                 pen.Dispose();
@@ -4186,7 +4215,6 @@ namespace Mafia
                     if (players[i].alive)
                     {
                         g.DrawEllipse(Pens.Black, players[i].position[0] - circleDiameter, players[i].position[1] - circleDiameter, circleDiameter * 2, circleDiameter * 2);
-                        Font font = new Font(FontFamily.GenericMonospace, 10, FontStyle.Bold);
                         g.DrawString(players[i].name, font, Brushes.Black, players[i].position[0] - 4 * (players[i].name.Length), players[i].position[1] - 8);
                         if (isNight)
                         {
