@@ -196,7 +196,7 @@ namespace Mafia
 
         [Serializable]public class Player
         {
-            public int[] position = new int[2];
+            public vector2D position = new vector2D();
             public bool alive = true;
             public List<int> cardNumbers;
             public List<int> cardTypes;
@@ -222,7 +222,6 @@ namespace Mafia
         {
             public bool usedMagnet = false;
             public bool[] usedTunnel = new bool[3];
-            public List<int> trajectory = new List<int>();
         }
 
         [Serializable]public class Shot
@@ -315,6 +314,8 @@ namespace Mafia
             public bool speedLabelVisible;
             public bool speedTrackBarEnabled;
             public bool speedTrackBarVisible;
+            public bool flyingCheckBoxEnabled;
+            public bool flyingCheckBoxVisible;
         }
         
         [Serializable]public class Card
@@ -344,6 +345,71 @@ namespace Mafia
             public int from;
             public int to;
             public int numOfTunnel;
+        }
+
+        [Serializable]public class vector2D
+        {
+            public float x;
+            public float y;
+
+            public vector2D(float x, float y)
+            {
+                this.x = x;
+                this.y = y;
+            }
+
+            public vector2D()
+            {
+
+            }
+
+            public vector2D(int x, int y)
+            {
+                this.x = (float)x;
+                this.y = (float)y;
+            }
+
+            public void add(vector2D v)
+            {
+                this.x += v.x;
+                this.y += v.y;
+            }
+
+            public float mag()
+            {
+                return (float)Math.Sqrt(x * x + y * y);
+            }
+
+            public vector2D normalize()
+            {
+                float m = mag();
+                if (m != 0 && m != 1)
+                {
+                    div(m);
+                }
+                return this;
+            }
+
+            public vector2D div(float n)
+            {
+                x /= n;
+                y /= n;
+                return this;
+            }
+
+            public vector2D setMag(float len)
+            {
+                normalize();
+                mult(len);
+                return this;
+            }
+
+            public vector2D mult(float n)
+            {
+                x *= n;
+                y *= n;
+                return this;
+            }
         }
 
         // global variables
@@ -643,7 +709,12 @@ namespace Mafia
             /* 149 */{"Odbierz kartę", "Odeber kartu" },
             /* 150 */{"Bómba", "Bomba" },
             /* 151 */{". ułamek przelecioł tunelym", ". část přeletěla tunelem" },
-            /* 152 */{"Czas pocisków: ", "Čas kulek: " },
+            /* 152 */{"Czas pocisków (ms): ", "Čas kulek (ms): " },
+            /* 153 */{"Szybkość pocisków (px/ms): ", "Rychlost kulek (px/ms): " },
+            /* 154 */{"Lotajónce kulki: ", "Létající kulky: " },
+            /* 155 */{"Karta ", "Karta " },
+            /* 156 */{" nimoże być graczowi", " nemůže být hráči" },
+            /* 157 */{" odebrano", " odebrána" },
         };
         
         // functions for initializing stuff
@@ -700,6 +771,8 @@ namespace Mafia
                 speedLabel.Visible = false;
                 speedTrackBar.Enabled = false;
                 speedTrackBar.Visible = false;
+                flyingCheckBox.Enabled = false;
+                flyingCheckBox.Visible = false;
                 labelStartPhase.Text = "Please select a language:";
                 comboBoxLanguage.SelectedIndex = 0;
                 this.AcceptButton = buttonStartPhase;
@@ -764,6 +837,7 @@ namespace Mafia
                     removeCardButton.Text = text[149, lang];
                     bombButton.Text = text[150, lang];
                     speedLabel.Text = text[152, lang] + speedTrackBar.Value;
+                    flyingCheckBox.Text = text[154, lang];
                     startPhase = 1;
                 }
                 // setting num of players
@@ -870,6 +944,8 @@ namespace Mafia
                     speedLabel.Visible = true;
                     speedTrackBar.Enabled = true;
                     speedTrackBar.Visible = true;
+                    flyingCheckBox.Enabled = true;
+                    flyingCheckBox.Visible = true;
                     thread2.Start();
                 }
             }
@@ -1230,8 +1306,8 @@ namespace Mafia
                     {
                         int x = width / 2 + (int)(Math.Cos(a) * distX);
                         int y = height / 2 + (int)(-Math.Sin(a) * distY);
-                        players[player].position[0] = x;
-                        players[player].position[1] = y;
+                        players[player].position.x = x;
+                        players[player].position.y = y;
                         for (int i = x - circleDiameter; i < x + circleDiameter; i++)
                         {
                             for (int j = y - circleDiameter; j < y + circleDiameter; j++)
@@ -2317,6 +2393,8 @@ namespace Mafia
                     speedLabel.Visible = false;
                     speedTrackBar.Enabled = false;
                     speedTrackBar.Visible = false;
+                    flyingCheckBox.Enabled = false;
+                    flyingCheckBox.Visible = false;
                     InfoRTB.Text = raport;
                     InfoLabel.Focus();
                     votedButton.Enabled = true;
@@ -2380,6 +2458,8 @@ namespace Mafia
                         addCardButton.Visible = false;
                         removeCardButton.Enabled = false;
                         removeCardButton.Visible = false;
+                        bombButton.Enabled = false;
+                        bombButton.Visible = false;
                         yesButton.Enabled = true;
                         yesButton.Visible = true;
                         noButton.Enabled = true;
@@ -2387,8 +2467,9 @@ namespace Mafia
                         speedLabel.Visible = true;
                         speedTrackBar.Enabled = true;
                         speedTrackBar.Visible = true;
-                        bombButton.Enabled = false;
-                        bombButton.Visible = false;
+                        flyingCheckBox.Enabled = true;
+                        flyingCheckBox.Visible = true;
+                        
                     });
                     return 0;
                 }
@@ -2492,7 +2573,9 @@ namespace Mafia
                 state.speedLabelVisible = speedLabel.Visible;
                 state.speedTrackBarEnabled = speedTrackBar.Enabled;
                 state.speedTrackBarVisible = speedTrackBar.Visible;
-            });
+                state.flyingCheckBoxEnabled = flyingCheckBox.Enabled;
+                state.flyingCheckBoxVisible = flyingCheckBox.Visible;
+    });
 
             gameStates.Add(DeepClone(state));
         }
@@ -2594,6 +2677,8 @@ namespace Mafia
                 speedLabel.Visible = state.speedLabelVisible;
                 speedTrackBar.Enabled = state.speedTrackBarEnabled;
                 speedTrackBar.Visible = state.speedTrackBarVisible;
+                flyingCheckBox.Enabled = state.flyingCheckBoxEnabled;
+                flyingCheckBox.Visible = state.flyingCheckBoxVisible;
             });
             if (gameStates.Count >= 2)
             {
@@ -2632,15 +2717,22 @@ namespace Mafia
         //first - jesli pocisk leci od gracza kiery niom wystrzelil, sniper - jesli sniper wystrzelil
         public void shoot(int target, int from, bool mafia, int reportNumber, bool first, bool sniper)
         {
+            //updating report and drawing bullets
             if (first)
             {
                 report[reportNumber] = text[80, lang];
             }
-            if (first || bullet.trajectory.Count == 0 || bullet.trajectory[bullet.trajectory.Count - 1] == -1)
+            else if(players[target].alive)
             {
-                bullet.trajectory.Add(from);
+                if(flyingCheckBox.Checked)
+                {
+                    drawBulletShoot(players[from].position.x, players[from].position.y, players[target].position.x, players[target].position.y);
+                }
+                else
+                {
+                    drawBullet(players[from].position.x, players[from].position.y, players[target].position.x, players[target].position.y);
+                }
             }
-            bullet.trajectory.Add(target);
             //initializing left and right player, checking if tunnels arent made to dead players (same with magnets)
             int leftPlayer = getLeftPlayer(target);
             int rightPlayer = getRightPlayer(target);
@@ -2675,7 +2767,6 @@ namespace Mafia
                     Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[81, lang] + endl; InfoLabel.Focus();
                 });
                 report[reportNumber] += text[82, lang];
-                bullet.trajectory.Add(-1);
             }
             //magnet
             else if (leftPlayer != -1 && players[leftPlayer].hasMagnet && !bullet.usedMagnet && players[leftPlayer].alive)
@@ -2726,7 +2817,7 @@ namespace Mafia
                 }
                 for (int i = 0; i < players[target].tunnelsFrom; i++)
                 {
-                    if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] || (rozszczep > 1 && first))
+                    if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] || rozszczep > 1)
                     {
                         if (rozszczep > 1)
                         {
@@ -2765,7 +2856,6 @@ namespace Mafia
                     Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[93, lang] + endl; InfoLabel.Focus();
                 });
                 report[reportNumber] += text[94, lang];
-                bullet.trajectory.Add(-1);
             }
             //al capone
             else if (players[target].cardTypes.Contains((int)cardTypeNumber.alCapone) && mafia)
@@ -2782,7 +2872,6 @@ namespace Mafia
                     Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[96, lang] + endl; InfoLabel.Focus();
                 });
                 report[reportNumber] += text[97, lang];
-                bullet.trajectory.Add(-1);
             }
             //doktor
             else if (players[target].hasDoktor)
@@ -2793,7 +2882,6 @@ namespace Mafia
                 });
                 report[reportNumber] += text[99, lang];
                 players[target].hasDoktor = false;
-                bullet.trajectory.Add(-1);
             }
             //zwierciadlo
             else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && !sniper && players[target].numberOfBloto == 0)
@@ -2889,7 +2977,6 @@ namespace Mafia
                 report[reportNumber] += text[109, lang] + (players[target].cardNumbers[item] + 1) + ".";
                 players[target].cardTypes.RemoveAt(item);
                 players[target].cardNumbers.RemoveAt(item);
-                bullet.trajectory.Add(-1);
             }
             //mrakoszlap
             else if (players[target].cardTypes.Contains(0))
@@ -2971,7 +3058,6 @@ namespace Mafia
                 }
                 players[target].cardTypes.RemoveAt(item);
                 players[target].cardNumbers.RemoveAt(item);
-                bullet.trajectory.Add(-1);
             }
             //umrzil
             else
@@ -3030,12 +3116,13 @@ namespace Mafia
                 }
                 this.Invoke((MethodInvoker)delegate { drawPlayers(); });
                 death(target, reportNumber);
-                bullet.trajectory.Add(-1);
             }
             if (first)
             {
                 drawPlayersCardsRTB();
-                this.Invoke((MethodInvoker)delegate { drawPlayers(); });
+                this.Invoke((MethodInvoker)delegate {
+                    drawPlayers();
+                });
             }
         }
 
@@ -3202,8 +3289,15 @@ namespace Mafia
         {
             try
             {
-                bullet.trajectory.Add(from);
-                bullet.trajectory.Add(target);
+                //drawing bullets
+                if (flyingCheckBox.Checked)
+                {
+                    drawBulletShoot(players[from].position.x, players[from].position.y, players[target].position.x, players[target].position.y);
+                }
+                else
+                {
+                    drawBullet(players[from].position.x, players[from].position.y, players[target].position.x, players[target].position.y);
+                }
                 //neprustrzelno westa
                 if (players[target].cardTypes.Contains((int)cardTypeNumber.neprustrzelnoWesta))
                 {
@@ -3858,25 +3952,28 @@ namespace Mafia
                     Info2RTB.Text += text[8, lang] + ' ' + players[selectedPlayer].name + text[138, lang] + nameOfCard(cardType, cardNumber) + "." + endl; InfoLabel.Focus();
                     drawPlayers();
                 });
-                yesButton.Enabled = true;
-                noButton.Enabled = true;
-                shotButton.Enabled = true;
-                votedButton.Enabled = true;
-                buttonStartNight.Enabled = true;
-                addCardButton.Enabled = true;
-                removeCardButton.Enabled = true;
-                undoButton.Enabled = true;
-                bombButton.Enabled = true;
-                removeCardCombobox.Items.Clear();
-                removeCardCombobox.Enabled = false;
-                removeCardCombobox.Visible = false;
-                addRemoveCard = 0;
-                canClickPictureBox = false;
             }
             else
             {
-                removeCardCombobox.DroppedDown = true;
+                this.Invoke((MethodInvoker)delegate
+                {
+                    Info2RTB.Text += text[155, lang] + nameOfCard(cardType, cardNumber) + text[156, lang] + ' ' + players[selectedPlayer].name + text[157, lang] + "." + endl; InfoLabel.Focus();
+                });
             }
+            yesButton.Enabled = true;
+            noButton.Enabled = true;
+            shotButton.Enabled = true;
+            votedButton.Enabled = true;
+            buttonStartNight.Enabled = true;
+            addCardButton.Enabled = true;
+            removeCardButton.Enabled = true;
+            undoButton.Enabled = true;
+            bombButton.Enabled = true;
+            removeCardCombobox.Items.Clear();
+            removeCardCombobox.Enabled = false;
+            removeCardCombobox.Visible = false;
+            addRemoveCard = 0;
+            canClickPictureBox = false;
         }
 
         private void bombButton_MouseDown(object sender, MouseEventArgs e)
@@ -3905,7 +4002,25 @@ namespace Mafia
 
         private void speedTrackBar_Scroll(object sender, EventArgs e)
         {
-            speedLabel.Text = text[152, lang] + speedTrackBar.Value;
+            speedLabel.Text = text[152 + (flyingCheckBox.Checked ? 1 : 0), lang] + speedTrackBar.Value;
+        }
+
+        private void flyingCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (flyingCheckBox.Checked)
+            {
+                speedTrackBar.Value = 20;
+                speedTrackBar.Maximum = 50;
+                speedTrackBar.Minimum = 5;
+                speedLabel.Text = text[153, lang] + speedTrackBar.Value;
+            }
+            else
+            {
+                speedTrackBar.Value = 0;
+                speedTrackBar.Maximum = 1000;
+                speedTrackBar.Minimum = 0;
+                speedLabel.Text = text[152, lang] + speedTrackBar.Value;
+            }
         }
 
         // functions for logging stuff into txt
@@ -3989,7 +4104,6 @@ namespace Mafia
                 {
                     bullet.usedTunnel[i] = false;
                 }
-                bullet.trajectory.Clear();
             }
             catch (Exception exception1)
             {
@@ -4117,10 +4231,10 @@ namespace Mafia
                     pen.Color = Color.LightSalmon;
                 }
                 
-                int x1 = players[from].position[0];
-                int y1 = players[from].position[1];
-                int x2 = players[to].position[0];
-                int y2 = players[to].position[1];
+                float x1 = players[from].position.x;
+                float y1 = players[from].position.y;
+                float x2 = players[to].position.x;
+                float y2 = players[to].position.y;
                 //g.DrawLine(pen, x1, y1, x2, y2);
 
                 double distx = x2 - x1;
@@ -4129,8 +4243,8 @@ namespace Mafia
                 pen.Width = 2;
                 for (int i = 1; i < 20; i++)
                 {
-                    int nx = x1 + (x2 - x1) * i / 20;
-                    int ny = y1 + (y2 - y1) * i / 20;
+                    float nx = x1 + (x2 - x1) * i / 20;
+                    float ny = y1 + (y2 - y1) * i / 20;
                     int x3 = Convert.ToInt32(nx + 15 * Math.Cos(Deg2Rad(angle + 145)));
                     int y3 = Convert.ToInt32(ny - 15 * Math.Sin(Deg2Rad(angle + 145)));
                     int x4 = Convert.ToInt32(nx + 15 * Math.Cos(Deg2Rad(angle - 145)));
@@ -4164,39 +4278,58 @@ namespace Mafia
             }
         }
 
-        public void drawBullet()
+        public void drawBulletShoot(float x1, float y1, float x2, float y2)
+        {
+            float speed = 20F;
+            this.Invoke((MethodInvoker)delegate {
+                speed = speedTrackBar.Value;
+            });
+            vector2D pos = new vector2D(x1, y1);
+            vector2D vel = new vector2D(x2 - x1, y2 - y1);
+            int time = (int)Math.Ceiling(vel.mag() / speed);
+            vel.setMag(speed);
+            int radius = 5;
+            for(int i = 0; i < time; i++)
+            {
+                drawPlayers();
+                g.FillEllipse(Brushes.Black, pos.x - radius, pos.y - radius, radius * 2, radius * 2);
+                this.Invoke((MethodInvoker)delegate {
+                    pictureBox1.Image = bmp;
+                    pictureBox1.Update();
+                });
+                pos.add(vel);
+            }
+        }
+
+        public void drawBullet(float x1, float y1, float x2, float y2)
         {
             try
             {
                 Pen pen = new Pen(Brushes.Black);
                 pen.Width = 2;
-                for (int i = 0; i < bullet.trajectory.Count - 1; i++)
-                {
-                    if (bullet.trajectory[i] != -1 && bullet.trajectory[i + 1] != -1 && bullet.trajectory[i] != bullet.trajectory[i + 1])
-                    {
-                        int x1 = players[bullet.trajectory[i]].position[0];
-                        int y1 = players[bullet.trajectory[i]].position[1];
-                        int x2 = players[bullet.trajectory[i + 1]].position[0];
-                        int y2 = players[bullet.trajectory[i + 1]].position[1];
-                        double distx = x2 - x1;
-                        double disty = y1 - y2;
 
-                        g.DrawLine(pen, x1, y1, x2, y2);
+                double distx = x2 - x1;
+                double disty = y1 - y2;
 
-                        double angle = Rad2Deg(Math.Atan2(disty, distx));
-                        int x3 = Convert.ToInt32(x2 + 10 * Math.Cos(Deg2Rad(angle + 150)));
-                        int y3 = Convert.ToInt32(y2 - 10 * Math.Sin(Deg2Rad(angle + 150)));
-                        int x4 = Convert.ToInt32(x2 + 10 * Math.Cos(Deg2Rad(angle - 150)));
-                        int y4 = Convert.ToInt32(y2 - 10 * Math.Sin(Deg2Rad(angle - 150)));
-                        g.DrawLine(pen, x2, y2, x3, y3);
-                        g.DrawLine(pen, x2, y2, x4, y4);
-                        pictureBox1.Image = bmp;
-                        pictureBox1.Update();
-                        Thread.Sleep(speedTrackBar.Value);
-                    }
-                }
+                g.DrawLine(pen, x1, y1, x2, y2);
+
+                double angle = Rad2Deg(Math.Atan2(disty, distx));
+
+                int x3 = Convert.ToInt32(x2 + 10 * Math.Cos(Deg2Rad(angle + 150)));
+                int y3 = Convert.ToInt32(y2 - 10 * Math.Sin(Deg2Rad(angle + 150)));
+                int x4 = Convert.ToInt32(x2 + 10 * Math.Cos(Deg2Rad(angle - 150)));
+                int y4 = Convert.ToInt32(y2 - 10 * Math.Sin(Deg2Rad(angle - 150)));
+
+                g.DrawLine(pen, x2, y2, x3, y3);
+                g.DrawLine(pen, x2, y2, x4, y4);
+
+                this.Invoke((MethodInvoker)delegate {
+                    pictureBox1.Image = bmp;
+                    pictureBox1.Update();
+                    Thread.Sleep(speedTrackBar.Value);
+                });
+
                 pen.Dispose();
-                bullet.trajectory.Clear();
             }
             catch (Exception exception1)
             {
@@ -4214,57 +4347,56 @@ namespace Mafia
                 {
                     if (players[i].alive)
                     {
-                        g.DrawEllipse(Pens.Black, players[i].position[0] - circleDiameter, players[i].position[1] - circleDiameter, circleDiameter * 2, circleDiameter * 2);
-                        g.DrawString(players[i].name, font, Brushes.Black, players[i].position[0] - 4 * (players[i].name.Length), players[i].position[1] - 8);
+                        g.DrawEllipse(Pens.Black, players[i].position.x - circleDiameter, players[i].position.y - circleDiameter, circleDiameter * 2, circleDiameter * 2);
+                        g.DrawString(players[i].name, font, Brushes.Black, players[i].position.x - 4 * (players[i].name.Length), players[i].position.y - 8);
                         if (isNight)
                         {
                             if (players[i].hasSlina)
                             {
-                                g.DrawImage(slinaImage, players[i].position[0], players[i].position[1], 50, 50);
+                                g.DrawImage(slinaImage, players[i].position.x, players[i].position.y, 50, 50);
                             }
                             if (players[i].hasPiosek)
                             {
-                                g.DrawImage(piosekImage, players[i].position[0], players[i].position[1] - 60, 50, 40);
+                                g.DrawImage(piosekImage, players[i].position.x, players[i].position.y - 60, 50, 40);
                             }
                             if (players[i].hasMagnet)
                             {
-                                g.DrawImage(magnetImage, players[i].position[0] - 60, players[i].position[1] + 7, 45, 40);
+                                g.DrawImage(magnetImage, players[i].position.x - 60, players[i].position.y + 7, 45, 40);
                             }
                             if (matrix && players[i].cardTypes.Contains((int)cardTypeNumber.matrix))
                             {
-                                g.DrawImage(matrixImage, players[i].position[0] - 70, players[i].position[1] - 50, 70, 40);
+                                g.DrawImage(matrixImage, players[i].position.x - 70, players[i].position.y - 50, 70, 40);
                             }
                         }
                         else
                         {
                             if (players[i].cardTypes.Contains((int)cardTypeNumber.meciar))
                             {
-                                g.DrawImage(meciarImage, players[i].position[0] + 20, players[i].position[1], 50, 50);
+                                g.DrawImage(meciarImage, players[i].position.x + 20, players[i].position.y, 50, 50);
                             }
                             if (players[i].cardTypes.Contains((int)cardTypeNumber.kovac))
                             {
-                                g.DrawImage(kovacImage, players[i].position[0] + 20, players[i].position[1] - 60, 50, 50);
+                                g.DrawImage(kovacImage, players[i].position.x + 20, players[i].position.y - 60, 50, 50);
                             }
                             if (players[i].cardTypes.Contains((int)cardTypeNumber.masowyWrah))
                             {
-                                g.DrawImage(masovyVrahImage, players[i].position[0] - 70, players[i].position[1], 50, 50);
+                                g.DrawImage(masovyVrahImage, players[i].position.x - 70, players[i].position.y, 50, 50);
                             }
                             if (players[i].hasZakazGlosowanio)
                             {
-                                g.DrawImage(soudceImage, players[i].position[0] - 70, players[i].position[1] - 60, 50, 50);
+                                g.DrawImage(soudceImage, players[i].position.x - 70, players[i].position.y - 60, 50, 50);
                             }
                             if (players[i].ofiaraKata)
                             {
-                                g.DrawImage(ofiaraImage, players[i].position[0] - 17, players[i].position[1] - 68, 40, 60);
+                                g.DrawImage(ofiaraImage, players[i].position.x - 17, players[i].position.y - 68, 40, 60);
                             }
                             if (players[i].zachronionyKatym)
                             {
-                                g.DrawImage(zachronionyImage, players[i].position[0] - 17, players[i].position[1] + 8, 40, 60);
+                                g.DrawImage(zachronionyImage, players[i].position.x - 17, players[i].position.y + 8, 40, 60);
                             }
                         }
                     }
                 }
-                drawBullet();
                 pictureBox1.Image = bmp;
             }
             catch (Exception exception1)
@@ -4287,7 +4419,7 @@ namespace Mafia
                 MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
-
+        
         private void Info2RTB_TextChanged(object sender, EventArgs e)
         {
             try

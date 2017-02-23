@@ -52,6 +52,7 @@
             this.bombButton = new System.Windows.Forms.Button();
             this.speedTrackBar = new System.Windows.Forms.TrackBar();
             this.speedLabel = new System.Windows.Forms.Label();
+            this.flyingCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numOfPlayersNumericUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.speedTrackBar)).BeginInit();
@@ -304,28 +305,39 @@
             // 
             // speedTrackBar
             // 
-            this.speedTrackBar.Location = new System.Drawing.Point(1148, 15);
+            this.speedTrackBar.Location = new System.Drawing.Point(1149, 6);
             this.speedTrackBar.Maximum = 1000;
             this.speedTrackBar.Name = "speedTrackBar";
             this.speedTrackBar.Size = new System.Drawing.Size(158, 45);
             this.speedTrackBar.TabIndex = 27;
-            this.speedTrackBar.Value = 50;
             this.speedTrackBar.Scroll += new System.EventHandler(this.speedTrackBar_Scroll);
             // 
             // speedLabel
             // 
             this.speedLabel.AutoSize = true;
-            this.speedLabel.Location = new System.Drawing.Point(1156, 47);
+            this.speedLabel.Location = new System.Drawing.Point(1156, 38);
             this.speedLabel.Name = "speedLabel";
             this.speedLabel.Size = new System.Drawing.Size(96, 13);
             this.speedLabel.TabIndex = 28;
             this.speedLabel.Text = "Czas pocisków: 50";
+            // 
+            // flyingCheckBox
+            // 
+            this.flyingCheckBox.AutoSize = true;
+            this.flyingCheckBox.Location = new System.Drawing.Point(1149, 57);
+            this.flyingCheckBox.Name = "flyingCheckBox";
+            this.flyingCheckBox.Size = new System.Drawing.Size(98, 17);
+            this.flyingCheckBox.TabIndex = 29;
+            this.flyingCheckBox.Text = "Lotajónce kulki";
+            this.flyingCheckBox.UseVisualStyleBackColor = true;
+            this.flyingCheckBox.CheckedChanged += new System.EventHandler(this.flyingCheckBox_CheckedChanged);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1362, 712);
+            this.Controls.Add(this.flyingCheckBox);
             this.Controls.Add(this.speedLabel);
             this.Controls.Add(this.speedTrackBar);
             this.Controls.Add(this.bombButton);
@@ -352,7 +364,7 @@
             this.Controls.Add(this.buttonStartNight);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "Mafia v3.8b";
+            this.Text = "Mafia v3.9";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -390,6 +402,7 @@
         private System.Windows.Forms.Button bombButton;
         private System.Windows.Forms.TrackBar speedTrackBar;
         private System.Windows.Forms.Label speedLabel;
+        private System.Windows.Forms.CheckBox flyingCheckBox;
     }
 }
 
