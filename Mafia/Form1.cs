@@ -191,7 +191,7 @@ namespace Mafia
          * 34 - pan czasu 
          * 35 - doktor
          * 36 - jozin z bazin - 3 pouziti
-         * Dokupy 56 karet
+         * Dokupy 57 karet
          */
 
         [Serializable]public class Player
