@@ -29,7 +29,7 @@ namespace Mafia
         /// </summary>
 
         const int numOfSpecificCards = 37;
-        readonly int[] amountOfSpecificCards = new int[numOfSpecificCards]
+        int[] amountOfSpecificCards = new int[numOfSpecificCards]
         {
          7, //mrakoszlap,
          2, //imunita
@@ -554,6 +554,8 @@ namespace Mafia
         Image zachronionyImage = Image.FromFile(".\\icons\\zachroniony.png");
         int lang;
         Font font = new Font(FontFamily.GenericMonospace, 10, FontStyle.Bold);
+        int[] amountOfSpecificCardsListBox = new int[numOfSpecificCards];
+        int numOfAllCardsListBox = 0;
         readonly string[,] text =
         {
             /*  0 */{"Nazwa", "Jméno" },
@@ -715,6 +717,7 @@ namespace Mafia
             /* 155 */{"Karta ", "Karta " },
             /* 156 */{" nimoże być graczowi", " nemůže být hráči" },
             /* 157 */{" odebrano", " odebrána" },
+            /* 158 */{"Chcesz, aby komputer rozdol karty?", "Chceš, aby počítač rozdělil karty?" },
         };
         
         // functions for initializing stuff
@@ -775,13 +778,17 @@ namespace Mafia
                 flyingCheckBox.Visible = false;
                 labelStartPhase.Text = "Please select a language:";
                 comboBoxLanguage.SelectedIndex = 0;
-                this.AcceptButton = buttonStartPhase;
+                AcceptButton = buttonStartPhase;
                 initializeCards();
                 numOfPlayersNumericUpDown.Focus();
                 posunyciDoktora = rnd.Next(2);
                 for (int i = 0; i < numberOfReports; i++)
                 {
                     report[i] = "";
+                }
+                for (int i = 0; i < numOfSpecificCards; i++)
+                {
+                    amountOfSpecificCardsListBox[i] = amountOfSpecificCards[i];
                 }
             }
             catch (Exception exception1)
@@ -884,6 +891,7 @@ namespace Mafia
                 else if (startPhase == 3)
                 {
                     setNumberOfAllCards();
+                    setNumberOfAllCardsListBox();
                     if (numOfAllCards % numberOfPlayers != 0)
                     {
                         buttonStartPhase.Enabled = false;
@@ -897,38 +905,63 @@ namespace Mafia
                     }
                     else
                     {
-                        startPhase = 4;
-                        buttonStartPhase.PerformClick();
+                        for (int i = 0; i < numberOfPlayers; i++)
+                        {
+                            players[i].cardNumbers = new List<int>();
+                            players[i].cardTypes = new List<int>();
+                        }
+                        CardsListBox.Visible = false;
+                        pictureBox1.Enabled = true;
+                        pictureBox1.Visible = true;
+                        initializePictureBox();
+                        initPlayers();
+                        drawPlayers();
+                        drawPlayersCardsRTB();
+                        labelStartPhase.Visible = false;
+                        labelStartPhase.Enabled = false;
+                        buttonStartPhase.Width = 0;
+                        yesButton.Enabled = true;
+                        yesButton.Visible = true;
+                        noButton.Enabled = true;
+                        noButton.Visible = true;
+                        InfoLabel.Enabled = true;
+                        InfoLabel.Visible = true;
+                        InfoLabel.Text = text[158, lang];
+                        AcceptButton = yesButton;
                     }
                 }
-                // initializing a couple of things and starting the game
-                else if (startPhase == 4)
+                // giving cards
+                else if(startPhase == 4)
                 {
-                    for (int i = 0; i < numberOfPlayers; i++)
-                    {
-                        players[i].cardNumbers = new List<int>();
-                        players[i].cardTypes = new List<int>();
-                    }
+                    yesButton.Enabled = false;
+                    yesButton.Visible = false;
+                    noButton.Enabled =  false;
+                    noButton.Visible =  false;
+                    InfoLabel.Enabled = false;
+                    InfoLabel.Visible = false;
+                    CardsListBox.Enabled = true;
+                    CardsListBox.Visible = true;
+                    CardsListBox.Left = bombButton.Location.X;
+                    CardsListBox.Top = bombButton.Location.Y;
+                    drawPlayersCardsRTB();
+                    canClickPictureBox = true;
+                }
+                // initializing a couple of things and starting the game
+                else if (startPhase == 5)
+                {
                     nextMrakoszlap = amountOfSpecificCards[(int)cardTypeNumber.mrakoszlap];
                     nextZwierciadlo = amountOfSpecificCards[(int)cardTypeNumber.zwierciadlo];
                     nextImunita = amountOfSpecificCards[(int)cardTypeNumber.imunita];
                     nextKewlar = amountOfSpecificCards[(int)cardTypeNumber.neprustrzelnoWesta];
                     nextProwazochodec = amountOfSpecificCards[(int)cardTypeNumber.prowazochodec];
                     CardsListBox.Visible = false;
-                    labelStartPhase.Visible = false;
-                    labelStartPhase.Enabled = false;
-                    buttonStartPhase.Visible = false;
+                    CardsListBox.Enabled = false;
+                    AcceptButton = buttonStartPhase;
                     buttonStartPhase.Enabled = false;
-                    giveCards();
-                    drawPlayersCardsRTB();
-                    zapiszRozdaneKartyDoTxt();
-                    pictureBox1.Enabled = true;
-                    pictureBox1.Visible = true;
-                    initializePictureBox();
-                    initPlayers();
-                    drawPlayers();
                     startPhase = -1;
                     nightPhase = 0;
+                    InfoLabel.Enabled = true;
+                    InfoLabel.Visible = true;
                     InfoRTB.Enabled = true;
                     InfoRTB.Visible = true;
                     Info2RTB.Enabled = true;
@@ -937,8 +970,6 @@ namespace Mafia
                     yesButton.Visible = true;
                     noButton.Enabled = true;
                     noButton.Visible = true;
-                    InfoLabel.Enabled = true;
-                    InfoLabel.Visible = true;
                     shotButton.Enabled = true;
                     shotButton.Visible = true;
                     speedLabel.Visible = true;
@@ -971,6 +1002,22 @@ namespace Mafia
             }
         }
 
+        public void setNumberOfAllCardsListBox()
+        {
+            try
+            {
+                numOfAllCardsListBox = 0;
+                for (int i = 0; i < numOfSpecificCards; i++)
+                {
+                    numOfAllCardsListBox += amountOfSpecificCardsListBox[i];
+                }
+            }
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
+            }
+        }
+
         public void drawCardsListBox()
         {
             try
@@ -978,7 +1025,7 @@ namespace Mafia
                 CardsListBox.Items.Clear();
                 for (int i = 0; i < numOfSpecificCards; i++)
                 {
-                    CardsListBox.Items.Add(cardNames[i, lang] + " (" + amountOfSpecificCards[i] + ")");
+                    CardsListBox.Items.Add(cardNames[i, lang] + " (" + amountOfSpecificCardsListBox[i] + ")");
                 }
                 CardsListBox.Height = CardsListBox.PreferredHeight;
             }
@@ -997,15 +1044,16 @@ namespace Mafia
                 {
                     cards[cardType].cards[cards[cardType].numInGame - 1].inGame = false;
                     amountOfSpecificCards[cardType]--;
+                    amountOfSpecificCardsListBox[cardType]--;
                     cards[cardType].numInGame--;
                     numOfAllCards--;
+                    numOfAllCardsListBox--;
                     if (numOfAllCards % numberOfPlayers == 0)
                     {
                         drawCardsListBox();
                         CardsListBox.Enabled = false;
                         buttonStartPhase.Enabled = true;
                         buttonStartPhase.Visible = true;
-                        labelStartPhase.Text = "Super";
                         startPhase = 3;
                         buttonStartPhase.PerformClick();
                     }
@@ -1024,146 +1072,153 @@ namespace Mafia
 
         public void giveCards()
         {
-            int[] cardTypes = new int[numOfAllCards];
-            int[] cardNumbers = new int[numOfAllCards];
-            int iter = 0;
-            for (int cardType = 0; cardType < numOfSpecificCards; cardType++)
+            try
             {
-                for (int cardNumber = 0; cardNumber < cards[cardType].numInGame; cardNumber++)
+                int[] cardTypes = new int[numOfAllCards];
+                int[] cardNumbers = new int[numOfAllCards];
+                int iter = 0;
+                for (int cardType = 0; cardType < numOfSpecificCards; cardType++)
                 {
-                    cardTypes[iter] = cardType;
-                    cardNumbers[iter] = cardNumber;
-                    iter++;
-                }
-            }
-            bool restart;
-            do
-            {
-                int zmiana1, zmiana2, pomoc;
-                for (int i = 0; i < 50000; i++)
-                {
-                    zmiana1 = rnd.Next(numOfAllCards);
-                    zmiana2 = rnd.Next(numOfAllCards);
-                    if (zmiana1 != zmiana2)
+                    for (int cardNumber = 0; cardNumber < cards[cardType].numInGame; cardNumber++)
                     {
-                        pomoc = cardTypes[zmiana1];
-                        cardTypes[zmiana1] = cardTypes[zmiana2];
-                        cardTypes[zmiana2] = pomoc;
-                        pomoc = cardNumbers[zmiana1];
-                        cardNumbers[zmiana1] = cardNumbers[zmiana2];
-                        cardNumbers[zmiana2] = pomoc;
+                        cardTypes[iter] = cardType;
+                        cardNumbers[iter] = cardNumber;
+                        iter++;
                     }
                 }
+                bool restart;
+                do
+                {
+                    int zmiana1, zmiana2, pomoc;
+                    for (int i = 0; i < 50000; i++)
+                    {
+                        zmiana1 = rnd.Next(numOfAllCards);
+                        zmiana2 = rnd.Next(numOfAllCards);
+                        if (zmiana1 != zmiana2)
+                        {
+                            pomoc = cardTypes[zmiana1];
+                            cardTypes[zmiana1] = cardTypes[zmiana2];
+                            cardTypes[zmiana2] = pomoc;
+                            pomoc = cardNumbers[zmiana1];
+                            cardNumbers[zmiana1] = cardNumbers[zmiana2];
+                            cardNumbers[zmiana2] = pomoc;
+                        }
+                    }
+                    for (int i = 0; i < numberOfPlayers; i++)
+                    {
+                        players[i].cardNumbers.Clear();
+                        players[i].cardTypes.Clear();
+                        for (int j = 0; j < numOfAllCards / numberOfPlayers; j++)
+                        {
+                            int card = i * numOfAllCards / numberOfPlayers + j;
+                            players[i].cardTypes.Add(cardTypes[card]);
+                            players[i].cardNumbers.Add(cardNumbers[card]);
+                            cards[cardTypes[card]].cards[cardNumbers[card]].player = i;
+                        }
+                    }
+                    restart = false;
+                    for (int i = 0; i < numberOfPlayers && !restart; i++)
+                    {
+                        bool hasMag2 = false;
+                        bool hasSilenyStrzelec1 = false;
+                        bool hasSilenyStrzelec2 = false;
+                        bool hasAlCapone = false;
+                        bool hasKusKona = false;
+                        bool hasGandalf = false;
+                        bool hasPijawica = false;
+                        bool hasKobra = false;
+                        bool hasAteista = false;
+                        bool hasMatrix = false;
+                        bool hasGrabarz = false;
+                        bool hasDoktor = false;
+                        bool hasLuneta = false;
+                        int numOfMrakoszlaps = 0;
+                        int numOfProwazochodec = 0;
+                        int mafia = 0;
+                        for (int j = 0; j < numOfAllCards / numberOfPlayers; j++)
+                        {
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.mag && players[i].cardNumbers[j] == 1) { hasMag2 = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.szilenyStrzelec && players[i].cardNumbers[j] == 0) { hasSilenyStrzelec1 = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.szilenyStrzelec && players[i].cardNumbers[j] == 1) { hasSilenyStrzelec2 = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.alCapone) { hasAlCapone = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.kusKona) { hasKusKona = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.gandalf) { hasGandalf = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.pijavica) { hasPijawica = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.kobra) { hasKobra = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.mafian) { mafia++; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.ateista) { hasAteista = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.matrix) { hasMatrix = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.luneta) { hasLuneta = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.grabarz) { hasGrabarz = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.doktor) { hasDoktor = true; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.mrakoszlap) { numOfMrakoszlaps++; }
+                            if (players[i].cardTypes[j] == (int)cardTypeNumber.prowazochodec) { numOfProwazochodec++; }
+                        }
+                        if (numOfMrakoszlaps > 1 && (hasGrabarz || hasPijawica || hasAlCapone || hasGandalf || hasKusKona))
+                        {
+                            restart = true;
+                        }
+                        if (numOfMrakoszlaps > 2 || numOfProwazochodec > 2)
+                        {
+                            restart = true;
+                        }
+                        if (mafia > 1)
+                        {
+                            restart = true;
+                        }
+                        if (mafia == 1 && (hasLuneta || hasDoktor))
+                        {
+                            restart = true;
+                        }
+                        if (hasSilenyStrzelec1 && hasSilenyStrzelec2)
+                        {
+                            restart = true;
+                        }
+                        if ((hasMag2 && hasSilenyStrzelec2) || (hasMag2 && hasAlCapone) || (hasSilenyStrzelec2 && hasAlCapone))
+                        {
+                            restart = true;
+                        }
+                        if (hasKusKona && hasGandalf)
+                        {
+                            restart = true;
+                        }
+                        if (hasPijawica && hasKobra)
+                        {
+                            restart = true;
+                        }
+                        if (hasAteista && hasMatrix)
+                        {
+                            restart = true;
+                        }
+                    }
+                }
+                while (restart);
+
+                //if player with Jozin z Bazin also has mafia, sileny strelec or sniper, he has only 2 blotos
                 for (int i = 0; i < numberOfPlayers; i++)
                 {
-                    players[i].cardNumbers.Clear();
-                    players[i].cardTypes.Clear();
-                    for (int j = 0; j < numOfAllCards / numberOfPlayers; j++)
-                    {
-                        int card = i * numOfAllCards / numberOfPlayers + j;
-                        players[i].cardTypes.Add(cardTypes[card]);
-                        players[i].cardNumbers.Add(cardNumbers[card]);
-                        cards[cardTypes[card]].cards[cardNumbers[card]].player = i;
-                    }
-                }
-                restart = false;
-                for (int i = 0; i < numberOfPlayers && !restart; i++)
-                {
-                    bool hasMag2 = false;
                     bool hasSilenyStrzelec1 = false;
                     bool hasSilenyStrzelec2 = false;
-                    bool hasAlCapone = false;
-                    bool hasKusKona = false;
-                    bool hasGandalf = false;
-                    bool hasPijawica = false;
-                    bool hasKobra = false;
-                    bool hasAteista = false;
-                    bool hasMatrix = false;
-                    bool hasGrabarz = false;
-                    bool hasDoktor = false;
-                    bool hasLuneta = false;
-                    int numOfMrakoszlaps = 0;
-                    int numOfProwazochodec = 0;
+                    bool hasJozinZBazin = false;
+                    bool hasSniper = false;
                     int mafia = 0;
                     for (int j = 0; j < numOfAllCards / numberOfPlayers; j++)
                     {
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.mag && players[i].cardNumbers[j] == 1) { hasMag2 = true; }
                         if (players[i].cardTypes[j] == (int)cardTypeNumber.szilenyStrzelec && players[i].cardNumbers[j] == 0) { hasSilenyStrzelec1 = true; }
                         if (players[i].cardTypes[j] == (int)cardTypeNumber.szilenyStrzelec && players[i].cardNumbers[j] == 1) { hasSilenyStrzelec2 = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.alCapone) { hasAlCapone = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.kusKona) { hasKusKona = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.gandalf) { hasGandalf = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.pijavica) { hasPijawica = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.kobra) { hasKobra = true; }
                         if (players[i].cardTypes[j] == (int)cardTypeNumber.mafian) { mafia++; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.ateista) { hasAteista = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.matrix) { hasMatrix = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.luneta) { hasLuneta = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.grabarz) { hasGrabarz = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.doktor) { hasDoktor = true; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.mrakoszlap) { numOfMrakoszlaps++; }
-                        if (players[i].cardTypes[j] == (int)cardTypeNumber.prowazochodec) { numOfProwazochodec++; }
+                        if (players[i].cardTypes[j] == (int)cardTypeNumber.jozinZBazin) { hasJozinZBazin = true; }
+                        if (players[i].cardTypes[j] == (int)cardTypeNumber.sniper) { hasSniper = true; }
                     }
-                    if (numOfMrakoszlaps > 1 && (hasGrabarz || hasPijawica || hasAlCapone || hasGandalf || hasKusKona))
+                    if (hasJozinZBazin && (hasSilenyStrzelec1 || hasSilenyStrzelec2 || mafia > 0 || hasSniper))
                     {
-                        restart = true;
-                    }
-                    if (numOfMrakoszlaps > 2 || numOfProwazochodec > 2)
-                    {
-                        restart = true;
-                    }
-                    if (mafia > 1)
-                    {
-                        restart = true;
-                    }
-                    if (mafia == 1 && (hasLuneta || hasDoktor))
-                    {
-                        restart = true;
-                    }
-                    if (hasSilenyStrzelec1 && hasSilenyStrzelec2)
-                    {
-                        restart = true;
-                    }
-                    if ((hasMag2 && hasSilenyStrzelec2) || (hasMag2 && hasAlCapone) || (hasSilenyStrzelec2 && hasAlCapone))
-                    {
-                        restart = true;
-                    }
-                    if (hasKusKona && hasGandalf)
-                    {
-                        restart = true;
-                    }
-                    if (hasPijawica && hasKobra)
-                    {
-                        restart = true;
-                    }
-                    if (hasAteista && hasMatrix)
-                    {
-                        restart = true;
+                        players[i].numberOfBloto = 2;
                     }
                 }
             }
-            while (restart);
-
-            //if player with Jozin z Bazin also has mafia, sileny strelec or sniper, he has only 2 blotos
-            for (int i = 0; i < numberOfPlayers; i++)
+            catch (Exception exception1)
             {
-                bool hasSilenyStrzelec1 = false;
-                bool hasSilenyStrzelec2 = false;
-                bool hasJozinZBazin = false;
-                bool hasSniper = false;
-                int mafia = 0;
-                for (int j = 0; j < numOfAllCards / numberOfPlayers; j++)
-                {
-                    if (players[i].cardTypes[j] == (int)cardTypeNumber.szilenyStrzelec && players[i].cardNumbers[j] == 0) { hasSilenyStrzelec1 = true; }
-                    if (players[i].cardTypes[j] == (int)cardTypeNumber.szilenyStrzelec && players[i].cardNumbers[j] == 1) { hasSilenyStrzelec2 = true; }
-                    if (players[i].cardTypes[j] == (int)cardTypeNumber.mafian) { mafia++; }
-                    if (players[i].cardTypes[j] == (int)cardTypeNumber.jozinZBazin) { hasJozinZBazin = true; }
-                    if (players[i].cardTypes[j] == (int)cardTypeNumber.sniper) { hasSniper = true; }
-                }
-                if (hasJozinZBazin && (hasSilenyStrzelec1 || hasSilenyStrzelec2 || mafia > 0 || hasSniper))
-                {
-                    players[i].numberOfBloto = 2;
-                }
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -1334,76 +1389,83 @@ namespace Mafia
                 MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
-        
+
         // functions for the game and stuff
 
         public void starter()
         {
-            while (numberOfAlivePlayers > cards[(int)cardTypeNumber.mafian].numInGame && cards[(int)cardTypeNumber.mafian].numInGame > 0)
+            try
             {
-                saveGameState();
-                if (starterThread == 0)
+                while (numberOfAlivePlayers > cards[(int)cardTypeNumber.mafian].numInGame && cards[(int)cardTypeNumber.mafian].numInGame > 0)
                 {
-                    int tmp = night();
-                    if(!undo)
+                    saveGameState();
+                    if (starterThread == 0)
                     {
-                        starterThread = tmp;
+                        int tmp = night();
+                        if (!undo)
+                        {
+                            starterThread = tmp;
+                        }
+                    }
+                    else
+                    {
+                        int tmp = day();
+                        if (!undo)
+                        {
+                            starterThread = tmp;
+                        }
                     }
                 }
-                else
+                string raport = "";
+                for (int i = 0; i < numberOfReports; i++)
                 {
-                    int tmp = day();
-                    if (!undo)
+                    if (report[i] != "")
                     {
-                        starterThread = tmp;
+                        raport += report[i] + endl;
+                        report[i] = "";
                     }
                 }
+
+                this.Invoke((MethodInvoker)delegate
+                {
+                    if (raport != "")
+                    {
+                        InfoRTB.Text += endl + raport;
+                    }
+
+                    yesButton.Enabled = false;
+                    yesButton.Visible = false;
+                    noButton.Enabled = false;
+                    noButton.Visible = false;
+                    votedButton.Enabled = false;
+                    votedButton.Visible = false;
+                    shotButton.Enabled = false;
+                    shotButton.Visible = false;
+                    buttonStartNight.Enabled = false;
+                    buttonStartNight.Visible = false;
+                    undoButton.Enabled = false;
+                    undoButton.Visible = false;
+                    bombButton.Enabled = false;
+                    bombButton.Visible = false;
+                    addCardButton.Enabled = false;
+                    addCardButton.Visible = false;
+                    removeCardButton.Enabled = false;
+                    removeCardButton.Visible = false;
+                    if (cards[(int)cardTypeNumber.mafian].numInGame > 0)
+                    {
+                        InfoLabel.Text = text[3, lang];
+                    }
+                    else
+                    {
+                        InfoLabel.Text = text[4, lang];
+                    }
+                    InfoLabel.Focus();
+                });
             }
-            string raport = "";
-            for (int i = 0; i < numberOfReports; i++)
+            catch (Exception exception1)
             {
-                if (report[i] != "")
-                {
-                    raport += report[i] + endl;
-                    report[i] = "";
-                }
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
             }
-            
-            this.Invoke((MethodInvoker)delegate
-            {
-                if (raport != "")
-                {
-                    InfoRTB.Text += endl + raport;
-                }
-                    
-                yesButton.Enabled = false;
-                yesButton.Visible = false;
-                noButton.Enabled = false;
-                noButton.Visible = false;
-                votedButton.Enabled = false;
-                votedButton.Visible = false;
-                shotButton.Enabled = false;
-                shotButton.Visible = false;
-                buttonStartNight.Enabled = false;
-                buttonStartNight.Visible = false;
-                undoButton.Enabled = false;
-                undoButton.Visible = false;
-                bombButton.Enabled = false;
-                bombButton.Visible = false;
-                addCardButton.Enabled = false;
-                addCardButton.Visible = false;
-                removeCardButton.Enabled = false;
-                removeCardButton.Visible = false;
-                if (cards[(int)cardTypeNumber.mafian].numInGame > 0)
-                {
-                    InfoLabel.Text = text[3, lang];
-                }
-                else
-                {
-                    InfoLabel.Text = text[4, lang];
-                }
-                InfoLabel.Focus();
-            });
         }
         
         public void initNight()
@@ -2481,221 +2543,235 @@ namespace Mafia
             }
             return 0;
         }
-        
+
         // functions for undoing stuff
 
         public void saveGameState()
         {
-            gameState state = new gameState();
-            state.players = new Player[numberOfPlayers];
-            for (int i = 0; i < numberOfPlayers; i++)
+            try
             {
-                state.players[i] = DeepClone(players[i]);
-            }
-            state.cards = new Cards[numOfSpecificCards];
-            for (int i = 0; i < numOfSpecificCards; i++)
-            {
-                state.cards[i] = DeepClone(cards[i]);
-            }
-            state.addRemoveCard = addRemoveCard;
-            state.bullet = bullet;
-            state.canClickPictureBox = canClickPictureBox;
-            state.clickedPlayer = clickedPlayer;
-            state.duchBoboExhibowolPoUmrziciu = duchBoboExhibowolPoUmrziciu;
-            state.evenNight = evenNight;
-            state.gandalfZyskolMraka = gandalfZyskolMraka;
-            state.grabarz = grabarz;
-            state.grabarzMrakoszlaps = grabarzMrakoszlaps;
-            state.graczKíeryKliko = graczKíeryKliko;
-            state.isNight = isNight;
-            state.kuskonaZyskolMraka = kuskonaZyskolMraka;
-            state.mafiansAim = mafiansAim;
-            state.mafiaShoots = mafiaShoots;
-            state.matrix = matrix;
-            state.matrixBullets = matrixBullets;
-            state.nextImunita = nextImunita;
-            state.nextKewlar = nextKewlar;
-            state.nextMrakoszlap = nextMrakoszlap;
-            state.nextProwazochodec = nextProwazochodec;
-            state.nextZwierciadlo = nextZwierciadlo;
-            state.nightPhase = nightPhase;
-            state.numberOfAlivePlayers = numberOfAlivePlayers;
-            state.numberOfTunnels = numberOfTunnels;
-            state.numOfAllCards = numOfAllCards;
-            state.numOfNight = numOfNight;
-            state.ofiara = ofiara;
-            state.pijawicaMrakoszlaps = pijawicaMrakoszlaps;
-            state.players = players;
-            state.playersNamesSet = playersNamesSet;
-            state.posunyciDoktora = posunyciDoktora;
-            state.report = report;
-            state.selectedPlayer = selectedPlayer;
-            state.shots = DeepClone(shots);
-            state.sklenarMirrors = DeepClone(sklenarMirrors);
-            state.starterThread = starterThread;
-            state.tunel1 = tunel1;
-            state.tunel2 = tunel2;
-            state.tunnels = tunnels;
-            state.votedShot = votedShot;
-            state.wakedPlayers = DeepClone(wakedPlayers);
-            state.wantsUse = wantsUse;
-            state.zachroniony = zachroniony;
-            //state.firstNightPhase = firstNightPhase;
-            this.Invoke((MethodInvoker)delegate
-            {
-                state.InfoRTBText = InfoRTB.Text;
-                state.Info2RTBText = Info2RTB.Text;
-                state.yesButtonEnabled = yesButton.Enabled;
-                state.yesButtonVisible = yesButton.Visible;
-                state.noButtonEnabled = noButton.Enabled;
-                state.noButtonVisible = noButton.Visible;
-                state.votedButtonEnabled = votedButton.Enabled;
-                state.votedButtonVisible = votedButton.Visible;
-                state.shotButtonEnabled = shotButton.Enabled;
-                state.shotButtonVisible = shotButton.Visible;
-                state.shotButtonText = shotButton.Text;
-                state.buttonStartNightEnabled = buttonStartNight.Enabled;
-                state.buttonStartNightVisible = buttonStartNight.Visible;
-                state.buttonStartNightText = buttonStartNight.Text;
-                state.addCardButtonEnabled = addCardButton.Enabled;
-                state.addCardButtonVisible = addCardButton.Visible;
-                state.removeCardButtonEnabled = removeCardButton.Enabled;
-                state.removeCardButtonVisible = removeCardButton.Visible;
-                state.addCardComboboxEnabled = addCardCombobox.Enabled;
-                state.addCardComboboxVisible = addCardCombobox.Visible;
-                state.removeCardComboboxEnabled = removeCardCombobox.Enabled;
-                state.removeCardComboboxVisible = removeCardCombobox.Visible;
-                state.undoButtonEnabled = undoButton.Enabled;
-                state.undoButtonVisible = undoButton.Visible;
-                state.bombButtonEnabled = bombButton.Enabled;
-                state.bombButtonVisible = bombButton.Visible;
-                state.PlayersCardsRichTextBoxText = PlayersCardsRichTextBox.Text;
-                state.speedLabelVisible = speedLabel.Visible;
-                state.speedTrackBarEnabled = speedTrackBar.Enabled;
-                state.speedTrackBarVisible = speedTrackBar.Visible;
-                state.flyingCheckBoxEnabled = flyingCheckBox.Enabled;
-                state.flyingCheckBoxVisible = flyingCheckBox.Visible;
-    });
+                gameState state = new gameState();
+                state.players = new Player[numberOfPlayers];
+                for (int i = 0; i < numberOfPlayers; i++)
+                {
+                    state.players[i] = DeepClone(players[i]);
+                }
+                state.cards = new Cards[numOfSpecificCards];
+                for (int i = 0; i < numOfSpecificCards; i++)
+                {
+                    state.cards[i] = DeepClone(cards[i]);
+                }
+                state.addRemoveCard = addRemoveCard;
+                state.bullet = bullet;
+                state.canClickPictureBox = canClickPictureBox;
+                state.clickedPlayer = clickedPlayer;
+                state.duchBoboExhibowolPoUmrziciu = duchBoboExhibowolPoUmrziciu;
+                state.evenNight = evenNight;
+                state.gandalfZyskolMraka = gandalfZyskolMraka;
+                state.grabarz = grabarz;
+                state.grabarzMrakoszlaps = grabarzMrakoszlaps;
+                state.graczKíeryKliko = graczKíeryKliko;
+                state.isNight = isNight;
+                state.kuskonaZyskolMraka = kuskonaZyskolMraka;
+                state.mafiansAim = mafiansAim;
+                state.mafiaShoots = mafiaShoots;
+                state.matrix = matrix;
+                state.matrixBullets = matrixBullets;
+                state.nextImunita = nextImunita;
+                state.nextKewlar = nextKewlar;
+                state.nextMrakoszlap = nextMrakoszlap;
+                state.nextProwazochodec = nextProwazochodec;
+                state.nextZwierciadlo = nextZwierciadlo;
+                state.nightPhase = nightPhase;
+                state.numberOfAlivePlayers = numberOfAlivePlayers;
+                state.numberOfTunnels = numberOfTunnels;
+                state.numOfAllCards = numOfAllCards;
+                state.numOfNight = numOfNight;
+                state.ofiara = ofiara;
+                state.pijawicaMrakoszlaps = pijawicaMrakoszlaps;
+                state.players = players;
+                state.playersNamesSet = playersNamesSet;
+                state.posunyciDoktora = posunyciDoktora;
+                state.report = report;
+                state.selectedPlayer = selectedPlayer;
+                state.shots = DeepClone(shots);
+                state.sklenarMirrors = DeepClone(sklenarMirrors);
+                state.starterThread = starterThread;
+                state.tunel1 = tunel1;
+                state.tunel2 = tunel2;
+                state.tunnels = tunnels;
+                state.votedShot = votedShot;
+                state.wakedPlayers = DeepClone(wakedPlayers);
+                state.wantsUse = wantsUse;
+                state.zachroniony = zachroniony;
+                //state.firstNightPhase = firstNightPhase;
+                this.Invoke((MethodInvoker)delegate
+                {
+                    state.InfoRTBText = InfoRTB.Text;
+                    state.Info2RTBText = Info2RTB.Text;
+                    state.yesButtonEnabled = yesButton.Enabled;
+                    state.yesButtonVisible = yesButton.Visible;
+                    state.noButtonEnabled = noButton.Enabled;
+                    state.noButtonVisible = noButton.Visible;
+                    state.votedButtonEnabled = votedButton.Enabled;
+                    state.votedButtonVisible = votedButton.Visible;
+                    state.shotButtonEnabled = shotButton.Enabled;
+                    state.shotButtonVisible = shotButton.Visible;
+                    state.shotButtonText = shotButton.Text;
+                    state.buttonStartNightEnabled = buttonStartNight.Enabled;
+                    state.buttonStartNightVisible = buttonStartNight.Visible;
+                    state.buttonStartNightText = buttonStartNight.Text;
+                    state.addCardButtonEnabled = addCardButton.Enabled;
+                    state.addCardButtonVisible = addCardButton.Visible;
+                    state.removeCardButtonEnabled = removeCardButton.Enabled;
+                    state.removeCardButtonVisible = removeCardButton.Visible;
+                    state.addCardComboboxEnabled = addCardCombobox.Enabled;
+                    state.addCardComboboxVisible = addCardCombobox.Visible;
+                    state.removeCardComboboxEnabled = removeCardCombobox.Enabled;
+                    state.removeCardComboboxVisible = removeCardCombobox.Visible;
+                    state.undoButtonEnabled = undoButton.Enabled;
+                    state.undoButtonVisible = undoButton.Visible;
+                    state.bombButtonEnabled = bombButton.Enabled;
+                    state.bombButtonVisible = bombButton.Visible;
+                    state.PlayersCardsRichTextBoxText = PlayersCardsRichTextBox.Text;
+                    state.speedLabelVisible = speedLabel.Visible;
+                    state.speedTrackBarEnabled = speedTrackBar.Enabled;
+                    state.speedTrackBarVisible = speedTrackBar.Visible;
+                    state.flyingCheckBoxEnabled = flyingCheckBox.Enabled;
+                    state.flyingCheckBoxVisible = flyingCheckBox.Visible;
+                });
 
-            gameStates.Add(DeepClone(state));
+                gameStates.Add(DeepClone(state));
+            }
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
+            }
         }
 
         public void restoreGameState(int numberOfGameState)
         {
-            gameState state = gameStates[numberOfGameState];
-            for (int i = 0; i < numOfSpecificCards; i++)
+            try
             {
-                cards[i] = DeepClone(state.cards[i]);
+                gameState state = gameStates[numberOfGameState];
+                for (int i = 0; i < numOfSpecificCards; i++)
+                {
+                    cards[i] = DeepClone(state.cards[i]);
+                }
+                addRemoveCard = state.addRemoveCard;
+                bullet = state.bullet;
+                canClickPictureBox = state.canClickPictureBox;
+                clickedPlayer = state.clickedPlayer;
+                duchBoboExhibowolPoUmrziciu = state.duchBoboExhibowolPoUmrziciu;
+                evenNight = state.evenNight;
+                gandalfZyskolMraka = state.gandalfZyskolMraka;
+                grabarz = state.grabarz;
+                grabarzMrakoszlaps = state.grabarzMrakoszlaps;
+                graczKíeryKliko = state.graczKíeryKliko;
+                isNight = state.isNight;
+                kuskonaZyskolMraka = state.kuskonaZyskolMraka;
+                mafiansAim = state.mafiansAim;
+                mafiaShoots = state.mafiaShoots;
+                matrix = state.matrix;
+                matrixBullets = state.matrixBullets;
+                nextImunita = state.nextImunita;
+                nextKewlar = state.nextKewlar;
+                nextMrakoszlap = state.nextMrakoszlap;
+                nextProwazochodec = state.nextProwazochodec;
+                nextZwierciadlo = state.nextZwierciadlo;
+                nightPhase = state.nightPhase;
+                numberOfAlivePlayers = state.numberOfAlivePlayers;
+                numberOfTunnels = state.numberOfTunnels;
+                numOfAllCards = state.numOfAllCards;
+                numOfNight = state.numOfNight;
+                ofiara = state.ofiara;
+                pijawicaMrakoszlaps = state.pijawicaMrakoszlaps;
+                for (int i = 0; i < numberOfPlayers; i++)
+                {
+                    players[i] = DeepClone(state.players[i]);
+                }
+                playersNamesSet = state.playersNamesSet;
+                posunyciDoktora = state.posunyciDoktora;
+                report = state.report;
+                selectedPlayer = state.selectedPlayer;
+                shots.Clear();
+                foreach (Shot shot in state.shots)
+                {
+                    shots.Add(shot);
+                }
+                sklenarMirrors.Clear();
+                foreach (int mirror in state.sklenarMirrors)
+                {
+                    sklenarMirrors.Add(mirror);
+                }
+                starterThread = state.starterThread;
+                tunel1 = state.tunel1;
+                tunel2 = state.tunel2;
+                tunnels = state.tunnels;
+                votedShot = state.votedShot;
+                wakedPlayers.Clear();
+                foreach (int wakedPlayer in state.wakedPlayers)
+                {
+                    wakedPlayers.Add(wakedPlayer);
+                }
+                wantsUse = state.wantsUse;
+                zachroniony = state.zachroniony;
+                this.Invoke((MethodInvoker)delegate
+                {
+                    InfoRTB.Text = state.InfoRTBText;
+                    Info2RTB.Text = state.Info2RTBText;
+                    yesButton.Enabled = state.yesButtonEnabled;
+                    yesButton.Visible = state.yesButtonVisible;
+                    noButton.Enabled = state.noButtonEnabled;
+                    noButton.Visible = state.noButtonVisible;
+                    votedButton.Enabled = state.votedButtonEnabled;
+                    votedButton.Visible = state.votedButtonVisible;
+                    shotButton.Enabled = state.shotButtonEnabled;
+                    shotButton.Visible = state.shotButtonVisible;
+                    shotButton.Text = state.shotButtonText;
+                    buttonStartNight.Enabled = state.buttonStartNightEnabled;
+                    buttonStartNight.Visible = state.buttonStartNightVisible;
+                    buttonStartNight.Text = state.buttonStartNightText;
+                    addCardButton.Enabled = state.addCardButtonEnabled;
+                    addCardButton.Visible = state.addCardButtonVisible;
+                    removeCardButton.Enabled = state.removeCardButtonEnabled;
+                    removeCardButton.Visible = state.removeCardButtonVisible;
+                    addCardCombobox.Enabled = state.addCardComboboxEnabled;
+                    addCardCombobox.Visible = state.addCardComboboxVisible;
+                    removeCardCombobox.Enabled = state.removeCardComboboxEnabled;
+                    removeCardCombobox.Visible = state.removeCardComboboxVisible;
+                    undoButton.Enabled = state.undoButtonEnabled;
+                    undoButton.Visible = state.undoButtonVisible;
+                    bombButton.Enabled = state.bombButtonEnabled;
+                    bombButton.Visible = state.bombButtonVisible;
+                    PlayersCardsRichTextBox.Text = state.PlayersCardsRichTextBoxText;
+                    speedLabel.Visible = state.speedLabelVisible;
+                    speedTrackBar.Enabled = state.speedTrackBarEnabled;
+                    speedTrackBar.Visible = state.speedTrackBarVisible;
+                    flyingCheckBox.Enabled = state.flyingCheckBoxEnabled;
+                    flyingCheckBox.Visible = state.flyingCheckBoxVisible;
+                });
+                if (gameStates.Count >= 2)
+                {
+                    gameStates.RemoveAt(gameStates.Count - 1);
+                    gameStates.RemoveAt(gameStates.Count - 1);
+                }
+                else if (gameStates.Count == 1)
+                {
+                    gameStates.RemoveAt(gameStates.Count - 1);
+                }
+                if (waitForClickPBset)
+                {
+                    waitForClickPB.Set();
+                }
+                if (waitForClickYesNoset)
+                {
+                    waitForClickYesNo.Set();
+                }
             }
-            addRemoveCard = state.addRemoveCard;
-            bullet = state.bullet;
-            canClickPictureBox = state.canClickPictureBox;
-            clickedPlayer = state.clickedPlayer;
-            duchBoboExhibowolPoUmrziciu = state.duchBoboExhibowolPoUmrziciu;
-            evenNight = state.evenNight;
-            gandalfZyskolMraka = state.gandalfZyskolMraka;
-            grabarz = state.grabarz;
-            grabarzMrakoszlaps = state.grabarzMrakoszlaps;
-            graczKíeryKliko = state.graczKíeryKliko;
-            isNight = state.isNight;
-            kuskonaZyskolMraka = state.kuskonaZyskolMraka;
-            mafiansAim = state.mafiansAim;
-            mafiaShoots = state.mafiaShoots;
-            matrix = state.matrix;
-            matrixBullets = state.matrixBullets;
-            nextImunita = state.nextImunita;
-            nextKewlar = state.nextKewlar;
-            nextMrakoszlap = state.nextMrakoszlap;
-            nextProwazochodec = state.nextProwazochodec;
-            nextZwierciadlo = state.nextZwierciadlo;
-            nightPhase = state.nightPhase;
-            numberOfAlivePlayers = state.numberOfAlivePlayers;
-            numberOfTunnels = state.numberOfTunnels;
-            numOfAllCards = state.numOfAllCards;
-            numOfNight = state.numOfNight;
-            ofiara = state.ofiara;
-            pijawicaMrakoszlaps = state.pijawicaMrakoszlaps;
-            for (int i = 0; i < numberOfPlayers; i++)
+            catch (Exception exception1)
             {
-                players[i] = DeepClone(state.players[i]);
-            }
-            playersNamesSet = state.playersNamesSet;
-            posunyciDoktora = state.posunyciDoktora;
-            report = state.report;
-            selectedPlayer = state.selectedPlayer;
-            shots.Clear();
-            foreach (Shot shot in state.shots)
-            {
-                shots.Add(shot);
-            }
-            sklenarMirrors.Clear();
-            foreach (int mirror in state.sklenarMirrors)
-            {
-                sklenarMirrors.Add(mirror);
-            }
-            starterThread = state.starterThread;
-            tunel1 = state.tunel1;
-            tunel2 = state.tunel2;
-            tunnels = state.tunnels;
-            votedShot = state.votedShot;
-            wakedPlayers.Clear();
-            foreach (int wakedPlayer in state.wakedPlayers)
-            {
-                wakedPlayers.Add(wakedPlayer);
-            }
-            wantsUse = state.wantsUse;
-            zachroniony = state.zachroniony;
-            this.Invoke((MethodInvoker)delegate
-            {
-                InfoRTB.Text = state.InfoRTBText;
-                Info2RTB.Text = state.Info2RTBText;
-                yesButton.Enabled = state.yesButtonEnabled;
-                yesButton.Visible = state.yesButtonVisible;
-                noButton.Enabled = state.noButtonEnabled;
-                noButton.Visible = state.noButtonVisible;
-                votedButton.Enabled = state.votedButtonEnabled;
-                votedButton.Visible = state.votedButtonVisible;
-                shotButton.Enabled = state.shotButtonEnabled;
-                shotButton.Visible = state.shotButtonVisible;
-                shotButton.Text = state.shotButtonText;
-                buttonStartNight.Enabled = state.buttonStartNightEnabled;
-                buttonStartNight.Visible = state.buttonStartNightVisible;
-                buttonStartNight.Text = state.buttonStartNightText;
-                addCardButton.Enabled = state.addCardButtonEnabled;
-                addCardButton.Visible = state.addCardButtonVisible;
-                removeCardButton.Enabled = state.removeCardButtonEnabled;
-                removeCardButton.Visible = state.removeCardButtonVisible;
-                addCardCombobox.Enabled = state.addCardComboboxEnabled;
-                addCardCombobox.Visible = state.addCardComboboxVisible;
-                removeCardCombobox.Enabled = state.removeCardComboboxEnabled;
-                removeCardCombobox.Visible = state.removeCardComboboxVisible;
-                undoButton.Enabled = state.undoButtonEnabled;
-                undoButton.Visible = state.undoButtonVisible;
-                bombButton.Enabled = state.bombButtonEnabled;
-                bombButton.Visible = state.bombButtonVisible;
-                PlayersCardsRichTextBox.Text = state.PlayersCardsRichTextBoxText;
-                speedLabel.Visible = state.speedLabelVisible;
-                speedTrackBar.Enabled = state.speedTrackBarEnabled;
-                speedTrackBar.Visible = state.speedTrackBarVisible;
-                flyingCheckBox.Enabled = state.flyingCheckBoxEnabled;
-                flyingCheckBox.Visible = state.flyingCheckBoxVisible;
-            });
-            if (gameStates.Count >= 2)
-            {
-                gameStates.RemoveAt(gameStates.Count - 1);
-                gameStates.RemoveAt(gameStates.Count - 1);
-            }
-            else if (gameStates.Count == 1)
-            {
-                gameStates.RemoveAt(gameStates.Count - 1);
-            }
-            if (waitForClickPBset)
-            {
-                waitForClickPB.Set();
-            }
-            if (waitForClickYesNoset)
-            {
-                waitForClickYesNo.Set();
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -2717,412 +2793,420 @@ namespace Mafia
         //first - jesli pocisk leci od gracza kiery niom wystrzelil, sniper - jesli sniper wystrzelil
         public void shoot(int target, int from, bool mafia, int reportNumber, bool first, bool sniper)
         {
-            //updating report and drawing bullets
-            if (first)
+            try
             {
-                report[reportNumber] = text[80, lang];
-            }
-            else if(players[target].alive)
-            {
-                if(flyingCheckBox.Checked)
+                //updating report and drawing bullets
+                if (first)
                 {
-                    drawBulletShoot(players[from].position.x, players[from].position.y, players[target].position.x, players[target].position.y);
+                    report[reportNumber] = text[80, lang];
                 }
-                else
+                else if (players[target].alive)
                 {
-                    drawBullet(players[from].position.x, players[from].position.y, players[target].position.x, players[target].position.y);
-                }
-            }
-            //initializing left and right player, checking if tunnels arent made to dead players (same with magnets)
-            int leftPlayer = getLeftPlayer(target);
-            int rightPlayer = getRightPlayer(target);
-            bool useTunnel = false;
-            int rozszczep = -1;
-            if (players[target].tunnelsFrom > 0)
-            {
-                int t = 0;
-                for (int i = 0; i < players[target].tunnelsFrom; i++)
-                {
-                    if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel])
+                    if (flyingCheckBox.Checked)
                     {
-                        if (players[players[target].tunnels[i].to].alive)
-                        {
-                            t++;
-                        }
+                        drawBulletShoot(players[from].position.x, players[from].position.y, players[target].position.x, players[target].position.y);
+                    }
+                    else
+                    {
+                        drawBullet(players[from].position.x, players[from].position.y, players[target].position.x, players[target].position.y);
                     }
                 }
-                if (t > 0)
+                //initializing left and right player, checking if tunnels arent made to dead players (same with magnets)
+                int leftPlayer = getLeftPlayer(target);
+                int rightPlayer = getRightPlayer(target);
+                bool useTunnel = false;
+                int rozszczep = -1;
+                if (players[target].tunnelsFrom > 0)
                 {
-                    useTunnel = true;
-                    rozszczep = t;
-                }
-            }
-            //matrix
-            if (matrix && players[target].cardTypes.Contains((int)cardTypeNumber.matrix))
-            {
-                int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.matrix);
-                matrixBullets++;
-                this.Invoke((MethodInvoker)delegate
-                {
-                    Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[81, lang] + endl; InfoLabel.Focus();
-                });
-                report[reportNumber] += text[82, lang];
-            }
-            //magnet
-            else if (leftPlayer != -1 && players[leftPlayer].hasMagnet && !bullet.usedMagnet && players[leftPlayer].alive)
-            {
-                this.Invoke((MethodInvoker)delegate
-                {
-                    Info2RTB.Text += text[83, lang] + players[target].name + text[84, lang] + players[leftPlayer].name + "." + endl; InfoLabel.Focus();
-                });
-                bullet.usedMagnet = true;
-                report[reportNumber] += text[85, lang];
-                if (players[leftPlayer].alive)
-                {
-                    shoot(leftPlayer, target, mafia, reportNumber, false, sniper);
-                }
-                else
-                {
-                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[leftPlayer].name + text[58, lang] + endl; InfoLabel.Focus(); });
-                    report[reportNumber] = text[86, lang];
-                }
-            }
-            else if (rightPlayer != -1 && players[rightPlayer].hasMagnet && !bullet.usedMagnet && players[rightPlayer].alive)
-            {
-                this.Invoke((MethodInvoker)delegate
-                {
-                    Info2RTB.Text += text[83, lang] + players[target].name + text[84, lang] + players[rightPlayer].name + "." + endl; InfoLabel.Focus();
-                });
-                bullet.usedMagnet = true;
-                report[reportNumber] += text[85, lang];
-                if (players[rightPlayer].alive)
-                {
-                    shoot(rightPlayer, target, mafia, reportNumber, false, sniper);
-                }
-                else
-                {
-                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[rightPlayer].name + text[58, lang] + endl; InfoLabel.Focus(); });
-                    report[reportNumber] += text[86, lang];
-                }
-            }
-            //tunel
-            else if (useTunnel)
-            {
-                if (rozszczep > 1)
-                {
+                    int t = 0;
                     for (int i = 0; i < players[target].tunnelsFrom; i++)
                     {
-                        bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] = true;
+                        if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel])
+                        {
+                            if (players[players[target].tunnels[i].to].alive)
+                            {
+                                t++;
+                            }
+                        }
+                    }
+                    if (t > 0)
+                    {
+                        useTunnel = true;
+                        rozszczep = t;
                     }
                 }
-                for (int i = 0; i < players[target].tunnelsFrom; i++)
+                //matrix
+                if (matrix && players[target].cardTypes.Contains((int)cardTypeNumber.matrix))
                 {
-                    if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] || rozszczep > 1)
+                    int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.matrix);
+                    matrixBullets++;
+                    this.Invoke((MethodInvoker)delegate
                     {
-                        if (rozszczep > 1)
+                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[81, lang] + endl; InfoLabel.Focus();
+                    });
+                    report[reportNumber] += text[82, lang];
+                }
+                //magnet
+                else if (leftPlayer != -1 && players[leftPlayer].hasMagnet && !bullet.usedMagnet && players[leftPlayer].alive)
+                {
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Info2RTB.Text += text[83, lang] + players[target].name + text[84, lang] + players[leftPlayer].name + "." + endl; InfoLabel.Focus();
+                    });
+                    bullet.usedMagnet = true;
+                    report[reportNumber] += text[85, lang];
+                    if (players[leftPlayer].alive)
+                    {
+                        shoot(leftPlayer, target, mafia, reportNumber, false, sniper);
+                    }
+                    else
+                    {
+                        this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[leftPlayer].name + text[58, lang] + endl; InfoLabel.Focus(); });
+                        report[reportNumber] = text[86, lang];
+                    }
+                }
+                else if (rightPlayer != -1 && players[rightPlayer].hasMagnet && !bullet.usedMagnet && players[rightPlayer].alive)
+                {
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Info2RTB.Text += text[83, lang] + players[target].name + text[84, lang] + players[rightPlayer].name + "." + endl; InfoLabel.Focus();
+                    });
+                    bullet.usedMagnet = true;
+                    report[reportNumber] += text[85, lang];
+                    if (players[rightPlayer].alive)
+                    {
+                        shoot(rightPlayer, target, mafia, reportNumber, false, sniper);
+                    }
+                    else
+                    {
+                        this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[rightPlayer].name + text[58, lang] + endl; InfoLabel.Focus(); });
+                        report[reportNumber] += text[86, lang];
+                    }
+                }
+                //tunel
+                else if (useTunnel)
+                {
+                    if (rozszczep > 1)
+                    {
+                        for (int i = 0; i < players[target].tunnelsFrom; i++)
                         {
-                            if (i == 0)
-                            {
-                                report[reportNumber] += text[87, lang] + rozszczep + text[88, lang];
-                            }
-                            report[reportNumber] += ", " + (i + 1) + text[151, lang];
-                        }
-                        if (players[players[target].tunnels[i].to].alive)
-                        {
-                            if (rozszczep == 1)
-                            {
-                                report[reportNumber] += text[92, lang];
-                            }
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                Info2RTB.Text += text[89, lang] + (players[target].tunnels[i].numOfTunnel + 1) + text[90, lang] + players[target].name + text[91, lang] + players[players[target].tunnels[i].to].name + "." + endl; InfoLabel.Focus();
-                            });
                             bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] = true;
-                            shoot(players[target].tunnels[i].to, target, mafia, reportNumber, false, sniper);
                         }
-                        else if (i == 0 || rozszczep > 1)
+                    }
+                    for (int i = 0; i < players[target].tunnelsFrom; i++)
+                    {
+                        if (!bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] || rozszczep > 1)
                         {
-                            this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[players[target].tunnels[i].to].name + text[58, lang] + endl; InfoLabel.Focus(); });
-                            report[reportNumber] += text[86, lang];
+                            if (rozszczep > 1)
+                            {
+                                if (i == 0)
+                                {
+                                    report[reportNumber] += text[87, lang] + rozszczep + text[88, lang];
+                                }
+                                report[reportNumber] += ", " + (i + 1) + text[151, lang];
+                            }
+                            if (players[players[target].tunnels[i].to].alive)
+                            {
+                                if (rozszczep == 1)
+                                {
+                                    report[reportNumber] += text[92, lang];
+                                }
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    Info2RTB.Text += text[89, lang] + (players[target].tunnels[i].numOfTunnel + 1) + text[90, lang] + players[target].name + text[91, lang] + players[players[target].tunnels[i].to].name + "." + endl; InfoLabel.Focus();
+                                });
+                                bullet.usedTunnel[players[target].tunnels[i].numOfTunnel] = true;
+                                shoot(players[target].tunnels[i].to, target, mafia, reportNumber, false, sniper);
+                            }
+                            else if (i == 0 || rozszczep > 1)
+                            {
+                                this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[players[target].tunnels[i].to].name + text[58, lang] + endl; InfoLabel.Focus(); });
+                                report[reportNumber] += text[86, lang];
+                            }
                         }
                     }
                 }
-            }
-            //slina
-            else if (players[target].hasSlina && !players[target].hasPiosek)
-            {
-                this.Invoke((MethodInvoker)delegate
-                {
-                    Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[93, lang] + endl; InfoLabel.Focus();
-                });
-                report[reportNumber] += text[94, lang];
-            }
-            //al capone
-            else if (players[target].cardTypes.Contains((int)cardTypeNumber.alCapone) && mafia)
-            {
-                if (players[target].hasSlina && players[target].hasPiosek)
+                //slina
+                else if (players[target].hasSlina && !players[target].hasPiosek)
                 {
                     this.Invoke((MethodInvoker)delegate
                     {
-                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
+                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[93, lang] + endl; InfoLabel.Focus();
                     });
+                    report[reportNumber] += text[94, lang];
                 }
-                this.Invoke((MethodInvoker)delegate
+                //al capone
+                else if (players[target].cardTypes.Contains((int)cardTypeNumber.alCapone) && mafia)
                 {
-                    Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[96, lang] + endl; InfoLabel.Focus();
-                });
-                report[reportNumber] += text[97, lang];
-            }
-            //doktor
-            else if (players[target].hasDoktor)
-            {
-                this.Invoke((MethodInvoker)delegate
-                {
-                    Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[98, lang] + endl; InfoLabel.Focus();
-                });
-                report[reportNumber] += text[99, lang];
-                players[target].hasDoktor = false;
-            }
-            //zwierciadlo
-            else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && !sniper && players[target].numberOfBloto == 0)
-            {
-                if (players[target].hasSlina && players[target].hasPiosek)
+                    if (players[target].hasSlina && players[target].hasPiosek)
+                    {
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
+                        });
+                    }
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[96, lang] + endl; InfoLabel.Focus();
+                    });
+                    report[reportNumber] += text[97, lang];
+                }
+                //doktor
+                else if (players[target].hasDoktor)
                 {
                     this.Invoke((MethodInvoker)delegate
                     {
-                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
+                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[98, lang] + endl; InfoLabel.Focus();
                     });
+                    report[reportNumber] += text[99, lang];
+                    players[target].hasDoktor = false;
                 }
-                int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
-                int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
+                //zwierciadlo
+                else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && !sniper && players[target].numberOfBloto == 0)
                 {
-                    sklenarMirrors.Add(players[target].cardNumbers[item]);
+                    if (players[target].hasSlina && players[target].hasPiosek)
+                    {
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
+                        });
+                    }
+                    int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
+                    int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
+                    if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
+                    {
+                        sklenarMirrors.Add(players[target].cardNumbers[item]);
+                    }
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
+                        + text[102, lang] + players[from].name + "." + endl; InfoLabel.Focus();
+                    });
+                    report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[104, lang];
+                    players[target].cardTypes.RemoveAt(item);
+                    players[target].cardNumbers.RemoveAt(item);
+                    if (players[from].alive)
+                    {
+                        shoot(from, target, mafia, reportNumber, false, sniper);
+                    }
+                    else
+                    {
+                        this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[from].name + text[58, lang] + endl; InfoLabel.Focus(); });
+                        report[reportNumber] += text[86, lang];
+                    }
                 }
-                this.Invoke((MethodInvoker)delegate
+                //neprustrzelno westa
+                else if (players[target].cardTypes.Contains(3))
                 {
-                    Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
-                    + text[102, lang] + players[from].name + "." + endl; InfoLabel.Focus();
-                });
-                report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[104, lang];
-                players[target].cardTypes.RemoveAt(item);
-                players[target].cardNumbers.RemoveAt(item);
-                if (players[from].alive)
-                {
-                    shoot(from, target, mafia, reportNumber, false, sniper);
+                    int item;
+                    if (players[target].hasSlina && players[target].hasPiosek)
+                    {
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
+                        });
+                    }
+                    //pocisk od snipera rozbila zwierciadlo
+                    if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && sniper)
+                    {
+                        item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
+                        int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
+                        if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
+                        {
+                            sklenarMirrors.Add(players[target].cardNumbers[item]);
+                        }
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
+                                + text[105, lang] + endl; InfoLabel.Focus();
+                        });
+                        report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
+                        players[target].cardTypes.RemoveAt(item);
+                        players[target].cardNumbers.RemoveAt(item);
+                        if (players[target].numberOfBloto > 0)
+                        {
+                            players[target].numberOfBloto--;
+                        }
+                    }
+                    //pocisk rozbila zwierciadlo pochlapane blotym
+                    else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && players[target].numberOfBloto > 0)
+                    {
+                        item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
+                        int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
+                        if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
+                        {
+                            sklenarMirrors.Add(players[target].cardNumbers[item]);
+                        }
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
+                                + text[107, lang] + endl; InfoLabel.Focus();
+                        });
+                        report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
+                        players[target].cardTypes.RemoveAt(item);
+                        players[target].cardNumbers.RemoveAt(item);
+                        players[target].numberOfBloto--;
+                    }
+                    item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.neprustrzelnoWesta);
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[108, lang] + (players[target].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                    });
+                    report[reportNumber] += text[109, lang] + (players[target].cardNumbers[item] + 1) + ".";
+                    players[target].cardTypes.RemoveAt(item);
+                    players[target].cardNumbers.RemoveAt(item);
                 }
+                //mrakoszlap
+                else if (players[target].cardTypes.Contains(0))
+                {
+                    int item;
+                    if (players[target].hasSlina && players[target].hasPiosek)
+                    {
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
+                        });
+                    }
+                    //pocisk od snipera rozbil zwierciadlo
+                    if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && sniper)
+                    {
+                        item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
+                        int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
+                        if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
+                        {
+                            sklenarMirrors.Add(players[target].cardNumbers[item]);
+                        }
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
+                                + text[105, lang] + endl; InfoLabel.Focus();
+                        });
+                        report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
+                        players[target].cardTypes.RemoveAt(item);
+                        players[target].cardNumbers.RemoveAt(item);
+                        if (players[target].numberOfBloto > 0)
+                        {
+                            players[target].numberOfBloto--;
+                        }
+                    }
+                    //pocisk rozbil zwierciadlo pochlapane blotym
+                    else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && players[target].numberOfBloto > 0)
+                    {
+                        item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
+                        int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
+                        if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
+                        {
+                            sklenarMirrors.Add(players[target].cardNumbers[item]);
+                        }
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
+                                + text[107, lang] + endl; InfoLabel.Focus();
+                        });
+                        report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
+                        players[target].cardTypes.RemoveAt(item);
+                        players[target].cardNumbers.RemoveAt(item);
+                        players[target].numberOfBloto--;
+                    }
+                    item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.mrakoszlap);
+                    int mrakoszlap = players[target].cardNumbers[item];
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[116, lang] + (players[target].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
+                    });
+                    report[reportNumber] += text[110, lang] + (players[target].cardNumbers[item] + 1) + ".";
+                    if (players[target].hasPijavica)
+                    {
+                        pijawicaMrakoszlaps++;
+                    }
+                    //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
+                    if (players[target].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
+                    {
+                        kuskonaZyskolMraka = true;
+                    }
+                    //jesli to je kuskona, tak gandalf zyskuje mrakoszlap
+                    if (players[target].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka && players[cards[(int)cardTypeNumber.gandalf].cards[0].player].alive)
+                    {
+                        gandalfZyskolMraka = true;
+                    }
+                    //jesli grabarz pouzyl swojom funkcje, tak dostanie mrakoszlapa
+                    if (grabarz)
+                    {
+                        grabarzMrakoszlaps++;
+                    }
+                    players[target].cardTypes.RemoveAt(item);
+                    players[target].cardNumbers.RemoveAt(item);
+                }
+                //umrzil
                 else
                 {
-                    this.Invoke((MethodInvoker)delegate { Info2RTB.Text += text[8, lang] + ' ' + players[from].name + text[58, lang] + endl; InfoLabel.Focus(); });
-                    report[reportNumber] += text[86, lang];
-                }
-            }
-            //neprustrzelno westa
-            else if (players[target].cardTypes.Contains(3))
-            {
-                int item;
-                if (players[target].hasSlina && players[target].hasPiosek)
-                {
-                    this.Invoke((MethodInvoker)delegate
+                    if (players[target].hasSlina && players[target].hasPiosek)
                     {
-                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
-                    });
-                }
-                //pocisk od snipera rozbila zwierciadlo
-                if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && sniper)
-                {
-                    item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
-                    int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                    if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
-                    {
-                        sklenarMirrors.Add(players[target].cardNumbers[item]);
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
+                        });
                     }
-                    this.Invoke((MethodInvoker)delegate
+                    //pocisk od snipera rozbil zwierciadlo
+                    if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && sniper)
                     {
-                        Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
-                            + text[105, lang] + endl; InfoLabel.Focus();
-                    });
-                    report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
-                    players[target].cardTypes.RemoveAt(item);
-                    players[target].cardNumbers.RemoveAt(item);
-                    if (players[target].numberOfBloto > 0)
+                        int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
+                        int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
+                        if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
+                        {
+                            sklenarMirrors.Add(players[target].cardNumbers[item]);
+                        }
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
+                                + text[105, lang] + endl; InfoLabel.Focus();
+                        });
+                        report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
+                        players[target].cardTypes.RemoveAt(item);
+                        players[target].cardNumbers.RemoveAt(item);
+                        if (players[target].numberOfBloto > 0)
+                        {
+                            players[target].numberOfBloto--;
+                        }
+                    }
+                    //pocisk rozbila zwierciadlo pochlapane blotym
+                    else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && players[target].numberOfBloto > 0)
                     {
+                        int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
+                        int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
+                        if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
+                        {
+                            sklenarMirrors.Add(players[target].cardNumbers[item]);
+                        }
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
+                                + text[107, lang] + endl; InfoLabel.Focus();
+                        });
+                        report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
+                        players[target].cardTypes.RemoveAt(item);
+                        players[target].cardNumbers.RemoveAt(item);
                         players[target].numberOfBloto--;
                     }
-                }
-                //pocisk rozbila zwierciadlo pochlapane blotym
-                else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && players[target].numberOfBloto > 0)
-                {
-                    item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
-                    int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                    if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
+                    if (players[target].hasPijavica)
                     {
-                        sklenarMirrors.Add(players[target].cardNumbers[item]);
+                        pijawicaMrakoszlaps++;
                     }
+                    this.Invoke((MethodInvoker)delegate { drawPlayers(); });
+                    death(target, reportNumber);
+                }
+                if (first)
+                {
+                    drawPlayersCardsRTB();
                     this.Invoke((MethodInvoker)delegate
                     {
-                        Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
-                            + text[107, lang] + endl; InfoLabel.Focus();
+                        drawPlayers();
                     });
-                    report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
-                    players[target].cardTypes.RemoveAt(item);
-                    players[target].cardNumbers.RemoveAt(item);
-                    players[target].numberOfBloto--;
                 }
-                item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.neprustrzelnoWesta);
-                this.Invoke((MethodInvoker)delegate
-                {
-                    Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[108, lang] + (players[target].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                });
-                report[reportNumber] += text[109, lang] + (players[target].cardNumbers[item] + 1) + ".";
-                players[target].cardTypes.RemoveAt(item);
-                players[target].cardNumbers.RemoveAt(item);
             }
-            //mrakoszlap
-            else if (players[target].cardTypes.Contains(0))
+            catch (Exception exception1)
             {
-                int item;
-                if (players[target].hasSlina && players[target].hasPiosek)
-                {
-                    this.Invoke((MethodInvoker)delegate
-                    {
-                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
-                    });
-                }
-                //pocisk od snipera rozbil zwierciadlo
-                if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && sniper)
-                {
-                    item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
-                    int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                    if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
-                    {
-                        sklenarMirrors.Add(players[target].cardNumbers[item]);
-                    }
-                    this.Invoke((MethodInvoker)delegate
-                    {
-                        Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
-                            + text[105, lang] + endl; InfoLabel.Focus();
-                    });
-                    report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
-                    players[target].cardTypes.RemoveAt(item);
-                    players[target].cardNumbers.RemoveAt(item);
-                    if (players[target].numberOfBloto > 0)
-                    {
-                        players[target].numberOfBloto--;
-                    }
-                }
-                //pocisk rozbil zwierciadlo pochlapane blotym
-                else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && players[target].numberOfBloto > 0)
-                {
-                    item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
-                    int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                    if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
-                    {
-                        sklenarMirrors.Add(players[target].cardNumbers[item]);
-                    }
-                    this.Invoke((MethodInvoker)delegate
-                    {
-                        Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
-                            + text[107, lang] + endl; InfoLabel.Focus();
-                    });
-                    report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
-                    players[target].cardTypes.RemoveAt(item);
-                    players[target].cardNumbers.RemoveAt(item);
-                    players[target].numberOfBloto--;
-                }
-                item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.mrakoszlap);
-                int mrakoszlap = players[target].cardNumbers[item];
-                this.Invoke((MethodInvoker)delegate
-                {
-                    Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[116, lang] + (players[target].cardNumbers[item] + 1) + "." + endl; InfoLabel.Focus();
-                });
-                report[reportNumber] += text[110, lang] + (players[target].cardNumbers[item] + 1) + ".";
-                if (players[target].hasPijavica)
-                {
-                    pijawicaMrakoszlaps++;
-                }
-                //jesli to je gandalf, tak kuskona zyskuje mrakoszlap
-                if (players[target].cardTypes.Contains((int)cardTypeNumber.gandalf) && !kuskonaZyskolMraka && players[cards[(int)cardTypeNumber.kusKona].cards[0].player].alive)
-                {
-                    kuskonaZyskolMraka = true;
-                }
-                //jesli to je kuskona, tak gandalf zyskuje mrakoszlap
-                if (players[target].cardTypes.Contains((int)cardTypeNumber.kusKona) && !gandalfZyskolMraka && players[cards[(int)cardTypeNumber.gandalf].cards[0].player].alive)
-                {
-                    gandalfZyskolMraka = true;
-                }
-                //jesli grabarz pouzyl swojom funkcje, tak dostanie mrakoszlapa
-                if (grabarz)
-                {
-                    grabarzMrakoszlaps++;
-                }
-                players[target].cardTypes.RemoveAt(item);
-                players[target].cardNumbers.RemoveAt(item);
-            }
-            //umrzil
-            else
-            {
-                if (players[target].hasSlina && players[target].hasPiosek)
-                {
-                    this.Invoke((MethodInvoker)delegate
-                    {
-                        Info2RTB.Text += text[8, lang] + ' ' + players[target].name + text[95, lang] + endl; InfoLabel.Focus();
-                    });
-                }
-                //pocisk od snipera rozbil zwierciadlo
-                if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && sniper)
-                {
-                    int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
-                    int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                    if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
-                    {
-                        sklenarMirrors.Add(players[target].cardNumbers[item]);
-                    }
-                    this.Invoke((MethodInvoker)delegate
-                    {
-                        Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
-                            + text[105, lang] + endl; InfoLabel.Focus();
-                    });
-                    report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
-                    players[target].cardTypes.RemoveAt(item);
-                    players[target].cardNumbers.RemoveAt(item);
-                    if (players[target].numberOfBloto > 0)
-                    {
-                        players[target].numberOfBloto--;
-                    }
-                }
-                //pocisk rozbila zwierciadlo pochlapane blotym
-                else if (players[target].cardTypes.Contains((int)cardTypeNumber.zwierciadlo) && players[target].numberOfBloto > 0)
-                {
-                    int item = players[target].cardTypes.FindIndex(x => x == (int)cardTypeNumber.zwierciadlo);
-                    int playerWithSklenar = cards[(int)cardTypeNumber.sklenar].cards[0].player;
-                    if (sklenarMirrors.Count == 0 && target != playerWithSklenar)
-                    {
-                        sklenarMirrors.Add(players[target].cardNumbers[item]);
-                    }
-                    this.Invoke((MethodInvoker)delegate
-                    {
-                        Info2RTB.Text += text[100, lang] + players[target].name + text[101, lang] + (players[target].cardNumbers[item] + 1)
-                            + text[107, lang] + endl; InfoLabel.Focus();
-                    });
-                    report[reportNumber] += text[103, lang] + (players[target].cardNumbers[item] + 1) + text[106, lang];
-                    players[target].cardTypes.RemoveAt(item);
-                    players[target].cardNumbers.RemoveAt(item);
-                    players[target].numberOfBloto--;
-                }
-                if (players[target].hasPijavica)
-                {
-                    pijawicaMrakoszlaps++;
-                }
-                this.Invoke((MethodInvoker)delegate { drawPlayers(); });
-                death(target, reportNumber);
-            }
-            if (first)
-            {
-                drawPlayersCardsRTB();
-                this.Invoke((MethodInvoker)delegate {
-                    drawPlayers();
-                });
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -3612,11 +3696,18 @@ namespace Mafia
 
         private void undoButton_Click(object sender, EventArgs e)
         {
-            this.Invoke((MethodInvoker)delegate { undoButton.Enabled = false; });
-            undo = true;
-            if (gameStates.Count >= 2)
+            try
             {
-                restoreGameState(gameStates.Count - 2);
+                this.Invoke((MethodInvoker)delegate { undoButton.Enabled = false; });
+                undo = true;
+                if (gameStates.Count >= 2)
+                {
+                    restoreGameState(gameStates.Count - 2);
+                }
+            }
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -3626,79 +3717,129 @@ namespace Mafia
             {
                 if (canClickPictureBox)
                 {
-                    if (addRemoveCard != 0)
+                    int player = pictureBoxArray[e.X, e.Y];
+                    if (startPhase != 4)
                     {
-                        if(addRemoveCard == 1)
+                        if (addRemoveCard != 0)
                         {
-                            int player = pictureBoxArray[e.X, e.Y];
-                            if (player < numberOfPlayers && players[player].alive)
+                            if (addRemoveCard == 1)
                             {
-                                //mrakoszlap
-                                if(addCardCombobox.SelectedIndex == 0)
+                                if (player < numberOfPlayers && players[player].alive)
                                 {
-                                    this.Invoke((MethodInvoker)delegate
+                                    //mrakoszlap
+                                    if (addCardCombobox.SelectedIndex == 0)
                                     {
-                                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
-                                    });
-                                    players[player].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
-                                    players[player].cardNumbers.Add(nextMrakoszlap);
-                                    cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], player, 1, true));
-                                    cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
-                                    nextMrakoszlap++;
+                                        this.Invoke((MethodInvoker)delegate
+                                        {
+                                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[66, lang] + (nextMrakoszlap + 1) + "." + endl; InfoLabel.Focus();
+                                        });
+                                        players[player].cardTypes.Add((int)cardTypeNumber.mrakoszlap);
+                                        players[player].cardNumbers.Add(nextMrakoszlap);
+                                        cards[(int)cardTypeNumber.mrakoszlap].cards.Add(new Card(cardNames[(int)cardTypeNumber.mrakoszlap, lang], player, 1, true));
+                                        cards[(int)cardTypeNumber.mrakoszlap].numInGame++;
+                                        nextMrakoszlap++;
+                                    }
+                                    //neprustrzelno westa
+                                    else if (addCardCombobox.SelectedIndex == 1)
+                                    {
+                                        this.Invoke((MethodInvoker)delegate
+                                        {
+                                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[134, lang] + (nextKewlar + 1) + "." + endl; InfoLabel.Focus();
+                                        });
+                                        players[player].cardTypes.Add((int)cardTypeNumber.neprustrzelnoWesta);
+                                        players[player].cardNumbers.Add(nextKewlar);
+                                        cards[(int)cardTypeNumber.neprustrzelnoWesta].cards.Add(new Card(cardNames[(int)cardTypeNumber.neprustrzelnoWesta, lang], player, 1, true));
+                                        cards[(int)cardTypeNumber.neprustrzelnoWesta].numInGame++;
+                                        nextKewlar++;
+                                    }
+                                    //zwierciadlo
+                                    else if (addCardCombobox.SelectedIndex == 2)
+                                    {
+                                        this.Invoke((MethodInvoker)delegate
+                                        {
+                                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[135, lang] + (nextZwierciadlo + 1) + "." + endl; InfoLabel.Focus();
+                                        });
+                                        players[player].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
+                                        players[player].cardNumbers.Add(nextZwierciadlo);
+                                        cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo, lang], player, 1, true));
+                                        cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
+                                        nextZwierciadlo++;
+                                    }
+                                    //imunita
+                                    else if (addCardCombobox.SelectedIndex == 3)
+                                    {
+                                        this.Invoke((MethodInvoker)delegate
+                                        {
+                                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[136, lang] + (nextImunita + 1) + "." + endl; InfoLabel.Focus();
+                                        });
+                                        players[player].cardTypes.Add((int)cardTypeNumber.imunita);
+                                        players[player].cardNumbers.Add(nextImunita);
+                                        cards[(int)cardTypeNumber.imunita].cards.Add(new Card(cardNames[(int)cardTypeNumber.imunita, lang], player, 1, true));
+                                        cards[(int)cardTypeNumber.imunita].numInGame++;
+                                        nextImunita++;
+                                    }
+                                    //prowazochodec
+                                    else if (addCardCombobox.SelectedIndex == 4)
+                                    {
+                                        this.Invoke((MethodInvoker)delegate
+                                        {
+                                            Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[137, lang] + (nextProwazochodec + 1) + "." + endl; InfoLabel.Focus();
+                                        });
+                                        players[player].cardTypes.Add((int)cardTypeNumber.prowazochodec);
+                                        players[player].cardNumbers.Add(nextProwazochodec);
+                                        cards[(int)cardTypeNumber.prowazochodec].cards.Add(new Card(cardNames[(int)cardTypeNumber.prowazochodec, lang], player, 1, true));
+                                        cards[(int)cardTypeNumber.prowazochodec].numInGame++;
+                                        nextProwazochodec++;
+                                    }
+                                    drawPlayersCardsRTB();
+                                    yesButton.Enabled = true;
+                                    noButton.Enabled = true;
+                                    shotButton.Enabled = true;
+                                    votedButton.Enabled = true;
+                                    buttonStartNight.Enabled = true;
+                                    addCardButton.Enabled = true;
+                                    removeCardButton.Enabled = true;
+                                    undoButton.Enabled = true;
+                                    bombButton.Enabled = true;
+                                    addCardCombobox.Enabled = false;
+                                    addCardCombobox.Visible = false;
+                                    addRemoveCard = 0;
+                                    canClickPictureBox = false;
                                 }
-                                //neprustrzelno westa
-                                else if (addCardCombobox.SelectedIndex == 1)
+                            }
+                            else
+                            {
+                                if (player < numberOfPlayers && players[player].alive)
                                 {
-                                    this.Invoke((MethodInvoker)delegate
+                                    selectedPlayer = player;
+                                    removeCardCombobox.Enabled = true;
+                                    removeCardCombobox.Items.Clear();
+                                    removeCardCombobox.Visible = true;
+                                    for (int i = 0; i < players[player].cardNumbers.Count; i++)
                                     {
-                                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[134, lang] + (nextKewlar + 1) + "." + endl; InfoLabel.Focus();
-                                    });
-                                    players[player].cardTypes.Add((int)cardTypeNumber.neprustrzelnoWesta);
-                                    players[player].cardNumbers.Add(nextKewlar);
-                                    cards[(int)cardTypeNumber.neprustrzelnoWesta].cards.Add(new Card(cardNames[(int)cardTypeNumber.neprustrzelnoWesta, lang], player, 1, true));
-                                    cards[(int)cardTypeNumber.neprustrzelnoWesta].numInGame++;
-                                    nextKewlar++;
+                                        removeCardCombobox.Items.Add(nameOfCard(players[player].cardTypes[i], players[player].cardNumbers[i]));
+                                    }
+                                    removeCardCombobox.DroppedDown = true;
                                 }
-                                //zwierciadlo
-                                else if (addCardCombobox.SelectedIndex == 2)
+                            }
+                        }
+                        else
+                        {
+                            if (isNight)
+                            {
+                                if (player < numberOfPlayers && players[player].alive && !(((numOfNight + 2 + posunyciDoktora) % 3 != 0) && graczKíeryKliko == (int)cardTypeNumber.doktor && players[player].cardTypes.Contains((int)cardTypeNumber.doktor)) && !(player == tunel1) && !(player == zachroniony))
                                 {
-                                    this.Invoke((MethodInvoker)delegate
-                                    {
-                                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[135, lang] + (nextZwierciadlo + 1) + "." + endl; InfoLabel.Focus();
-                                    });
-                                    players[player].cardTypes.Add((int)cardTypeNumber.zwierciadlo);
-                                    players[player].cardNumbers.Add(nextZwierciadlo);
-                                    cards[(int)cardTypeNumber.zwierciadlo].cards.Add(new Card(cardNames[(int)cardTypeNumber.zwierciadlo, lang], player, 1, true));
-                                    cards[(int)cardTypeNumber.zwierciadlo].numInGame++;
-                                    nextZwierciadlo++;
+                                    clickedPlayer = player;
+                                    waitForClickPB.Set();
                                 }
-                                //imunita
-                                else if (addCardCombobox.SelectedIndex == 3)
+                            }
+                            else
+                            {
+                                if (player >= 0 && player < numberOfPlayers && players[player].alive)
                                 {
-                                    this.Invoke((MethodInvoker)delegate
-                                    {
-                                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[136, lang] + (nextImunita + 1) + "." + endl; InfoLabel.Focus();
-                                    });
-                                    players[player].cardTypes.Add((int)cardTypeNumber.imunita);
-                                    players[player].cardNumbers.Add(nextImunita);
-                                    cards[(int)cardTypeNumber.imunita].cards.Add(new Card(cardNames[(int)cardTypeNumber.imunita, lang], player, 1, true));
-                                    cards[(int)cardTypeNumber.imunita].numInGame++;
-                                    nextImunita++;
+                                    votedShoot(player);
                                 }
-                                //prowazochodec
-                                else if (addCardCombobox.SelectedIndex == 4)
-                                {
-                                    this.Invoke((MethodInvoker)delegate
-                                    {
-                                        Info2RTB.Text += text[8, lang] + ' ' + players[player].name + text[137, lang] + (nextProwazochodec + 1) + "." + endl; InfoLabel.Focus();
-                                    });
-                                    players[player].cardTypes.Add((int)cardTypeNumber.prowazochodec);
-                                    players[player].cardNumbers.Add(nextProwazochodec);
-                                    cards[(int)cardTypeNumber.prowazochodec].cards.Add(new Card(cardNames[(int)cardTypeNumber.prowazochodec, lang], player, 1, true));
-                                    cards[(int)cardTypeNumber.prowazochodec].numInGame++;
-                                    nextProwazochodec++;
-                                }
-                                drawPlayersCardsRTB();
+                                canClickPictureBox = false;
                                 yesButton.Enabled = true;
                                 noButton.Enabled = true;
                                 shotButton.Enabled = true;
@@ -3708,60 +3849,43 @@ namespace Mafia
                                 removeCardButton.Enabled = true;
                                 undoButton.Enabled = true;
                                 bombButton.Enabled = true;
-                                addCardCombobox.Enabled = false;
-                                addCardCombobox.Visible = false;
-                                addRemoveCard = 0;
-                                canClickPictureBox = false;
-                            }
-                        }
-                        else
-                        {
-                            int player = pictureBoxArray[e.X, e.Y];
-                            if (player < numberOfPlayers && players[player].alive)
-                            {
-                                selectedPlayer = player;
-                                removeCardCombobox.Enabled = true;
-                                removeCardCombobox.Items.Clear();
-                                removeCardCombobox.Visible = true;
-                                for (int i = 0; i < players[player].cardNumbers.Count; i++)
+                                if (numberOfAlivePlayers == cards[(int)cardTypeNumber.mafian].numInGame || cards[(int)cardTypeNumber.mafian].numInGame == 0)
                                 {
-                                    removeCardCombobox.Items.Add(nameOfCard(players[player].cardTypes[i], players[player].cardNumbers[i]));
+                                    waitForClickYesNo.Set();
                                 }
-                                removeCardCombobox.DroppedDown = true;
                             }
                         }
                     }
-                    else
+                    else if(player < numberOfPlayers && CardsListBox.SelectedIndex >= 0 && players[player].cardNumbers.Count < (numOfAllCards / numberOfPlayers))
                     {
-                        if (isNight)
+                        int cardType = CardsListBox.SelectedIndex;
+                        int cardNumber = amountOfSpecificCards[cardType] - amountOfSpecificCardsListBox[cardType];
+                        if (amountOfSpecificCardsListBox[cardType] > 0)
                         {
-                            int player = pictureBoxArray[e.X, e.Y];
-                            if (player < numberOfPlayers && players[player].alive && !(((numOfNight + 2 + posunyciDoktora) % 3 != 0) && graczKíeryKliko == (int)cardTypeNumber.doktor && players[player].cardTypes.Contains((int)cardTypeNumber.doktor)) && !(player == tunel1) && !(player == zachroniony))
+                            players[player].cardTypes.Add(cardType);
+                            players[player].cardNumbers.Add(cardNumber);
+                            cards[cardType].cards[cardNumber].player = player;
+                            amountOfSpecificCardsListBox[cardType]--;
+                            numOfAllCardsListBox--;
+                            drawCardsListBox();
+                            drawPlayersCardsRTB();
+                            CardsListBox.SelectedIndex = cardType;
+
+                            if (numOfAllCardsListBox == 0)
                             {
-                                clickedPlayer = player;
-                                waitForClickPB.Set();
+                                canClickPictureBox = false;
+                                CardsListBox.Enabled = false;
+                                //buttonStartPhase.Enabled = true;
+                                //buttonStartPhase.Width = 0;
+                                startPhase = 5;
+                                buttonStartPhase.PerformClick();
                             }
-                        }
-                        else
-                        {
-                            int player = pictureBoxArray[e.X, e.Y];
-                            if (player >= 0 && player < numberOfPlayers && players[player].alive)
+                            else
                             {
-                                votedShoot(player);
-                            }
-                            canClickPictureBox = false;
-                            yesButton.Enabled = true;
-                            noButton.Enabled = true;
-                            shotButton.Enabled = true;
-                            votedButton.Enabled = true;
-                            buttonStartNight.Enabled = true;
-                            addCardButton.Enabled = true;
-                            removeCardButton.Enabled = true;
-                            undoButton.Enabled = true;
-                            bombButton.Enabled = true;
-                            if (numberOfAlivePlayers == cards[(int)cardTypeNumber.mafian].numInGame || cards[(int)cardTypeNumber.mafian].numInGame == 0)
-                            {
-                                waitForClickYesNo.Set();
+                                while (amountOfSpecificCardsListBox[CardsListBox.SelectedIndex] == 0)
+                                {
+                                    CardsListBox.SelectedIndex = (CardsListBox.SelectedIndex == 0) ? 1 : ((CardsListBox.SelectedIndex + 1) % numOfSpecificCards);
+                                }
                             }
                         }
                     }
@@ -3777,8 +3901,19 @@ namespace Mafia
         {
             try
             {
-                wantsUse = true;
-                waitForClickYesNo.Set();
+                if (startPhase == 3)
+                {
+                    giveCards();
+                    zapiszRozdaneKartyDoTxt();
+                    drawPlayersCardsRTB();
+                    startPhase = 5;
+                    buttonStartPhase.PerformClick();
+                }
+                else
+                {
+                    wantsUse = true;
+                    waitForClickYesNo.Set();
+                }
             }
             catch (Exception exception1)
             {
@@ -3790,8 +3925,16 @@ namespace Mafia
         {
             try
             {
-                wantsUse = false;
-                waitForClickYesNo.Set();
+                if (startPhase == 3)
+                {
+                    startPhase = 4;
+                    buttonStartPhase.PerformClick();
+                }
+                else
+                {
+                    wantsUse = false;
+                    waitForClickYesNo.Set();
+                }
             }
             catch (Exception exception1)
             {
@@ -3918,62 +4061,69 @@ namespace Mafia
                 MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString());
             }
         }
-        
+
         private void removeCardCombobox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            int cardType = players[selectedPlayer].cardTypes[removeCardCombobox.SelectedIndex];
-            int cardNumber = players[selectedPlayer].cardNumbers[removeCardCombobox.SelectedIndex];
-            if (cardType == (int)cardTypeNumber.mrakoszlap || 
-                cardType == (int)cardTypeNumber.imunita || 
-                cardType == (int)cardTypeNumber.prowazochodec || 
-                cardType == (int)cardTypeNumber.neprustrzelnoWesta || 
-                cardType == (int)cardTypeNumber.slina || 
-                cardType == (int)cardTypeNumber.pijavica || 
-                cardType == (int)cardTypeNumber.zwierciadlo || 
-                cardType == (int)cardTypeNumber.terorista || 
-                cardType == (int)cardTypeNumber.meciar || 
-                cardType == (int)cardTypeNumber.kovac || 
-                cardType == (int)cardTypeNumber.alCapone || 
-                cardType == (int)cardTypeNumber.ateista || 
-                cardType == (int)cardTypeNumber.anarchista || 
-                cardType == (int)cardTypeNumber.sklenar || 
-                cardType == (int)cardTypeNumber.masowyWrah || 
-                cardType == (int)cardTypeNumber.luneta || 
-                cardType == (int)cardTypeNumber.grabarz || 
-                cardType == (int)cardTypeNumber.panCzasu || 
-                cardType == (int)cardTypeNumber.jozinZBazin)
+            try
             {
-                cards[cardType].cards[cardNumber].inGame = false;
-                players[selectedPlayer].cardTypes.RemoveAt(removeCardCombobox.SelectedIndex);
-                players[selectedPlayer].cardNumbers.RemoveAt(removeCardCombobox.SelectedIndex);
-                drawPlayersCardsRTB();
-                this.Invoke((MethodInvoker)delegate
+                int cardType = players[selectedPlayer].cardTypes[removeCardCombobox.SelectedIndex];
+                int cardNumber = players[selectedPlayer].cardNumbers[removeCardCombobox.SelectedIndex];
+                if (cardType == (int)cardTypeNumber.mrakoszlap ||
+                    cardType == (int)cardTypeNumber.imunita ||
+                    cardType == (int)cardTypeNumber.prowazochodec ||
+                    cardType == (int)cardTypeNumber.neprustrzelnoWesta ||
+                    cardType == (int)cardTypeNumber.slina ||
+                    cardType == (int)cardTypeNumber.pijavica ||
+                    cardType == (int)cardTypeNumber.zwierciadlo ||
+                    cardType == (int)cardTypeNumber.terorista ||
+                    cardType == (int)cardTypeNumber.meciar ||
+                    cardType == (int)cardTypeNumber.kovac ||
+                    cardType == (int)cardTypeNumber.alCapone ||
+                    cardType == (int)cardTypeNumber.ateista ||
+                    cardType == (int)cardTypeNumber.anarchista ||
+                    cardType == (int)cardTypeNumber.sklenar ||
+                    cardType == (int)cardTypeNumber.masowyWrah ||
+                    cardType == (int)cardTypeNumber.luneta ||
+                    cardType == (int)cardTypeNumber.grabarz ||
+                    cardType == (int)cardTypeNumber.panCzasu ||
+                    cardType == (int)cardTypeNumber.jozinZBazin)
                 {
-                    Info2RTB.Text += text[8, lang] + ' ' + players[selectedPlayer].name + text[138, lang] + nameOfCard(cardType, cardNumber) + "." + endl; InfoLabel.Focus();
-                    drawPlayers();
-                });
+                    cards[cardType].cards[cardNumber].inGame = false;
+                    players[selectedPlayer].cardTypes.RemoveAt(removeCardCombobox.SelectedIndex);
+                    players[selectedPlayer].cardNumbers.RemoveAt(removeCardCombobox.SelectedIndex);
+                    drawPlayersCardsRTB();
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Info2RTB.Text += text[8, lang] + ' ' + players[selectedPlayer].name + text[138, lang] + nameOfCard(cardType, cardNumber) + "." + endl; InfoLabel.Focus();
+                        drawPlayers();
+                    });
+                }
+                else
+                {
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Info2RTB.Text += text[155, lang] + nameOfCard(cardType, cardNumber) + text[156, lang] + ' ' + players[selectedPlayer].name + text[157, lang] + "." + endl; InfoLabel.Focus();
+                    });
+                }
+                yesButton.Enabled = true;
+                noButton.Enabled = true;
+                shotButton.Enabled = true;
+                votedButton.Enabled = true;
+                buttonStartNight.Enabled = true;
+                addCardButton.Enabled = true;
+                removeCardButton.Enabled = true;
+                undoButton.Enabled = true;
+                bombButton.Enabled = true;
+                removeCardCombobox.Items.Clear();
+                removeCardCombobox.Enabled = false;
+                removeCardCombobox.Visible = false;
+                addRemoveCard = 0;
+                canClickPictureBox = false;
             }
-            else
+            catch (Exception exception1)
             {
-                this.Invoke((MethodInvoker)delegate
-                {
-                    Info2RTB.Text += text[155, lang] + nameOfCard(cardType, cardNumber) + text[156, lang] + ' ' + players[selectedPlayer].name + text[157, lang] + "." + endl; InfoLabel.Focus();
-                });
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
             }
-            yesButton.Enabled = true;
-            noButton.Enabled = true;
-            shotButton.Enabled = true;
-            votedButton.Enabled = true;
-            buttonStartNight.Enabled = true;
-            addCardButton.Enabled = true;
-            removeCardButton.Enabled = true;
-            undoButton.Enabled = true;
-            bombButton.Enabled = true;
-            removeCardCombobox.Items.Clear();
-            removeCardCombobox.Enabled = false;
-            removeCardCombobox.Visible = false;
-            addRemoveCard = 0;
-            canClickPictureBox = false;
         }
 
         private void bombButton_MouseDown(object sender, MouseEventArgs e)
@@ -4002,24 +4152,38 @@ namespace Mafia
 
         private void speedTrackBar_Scroll(object sender, EventArgs e)
         {
-            speedLabel.Text = text[152 + (flyingCheckBox.Checked ? 1 : 0), lang] + speedTrackBar.Value;
+            try
+            {
+                speedLabel.Text = text[152 + (flyingCheckBox.Checked ? 1 : 0), lang] + speedTrackBar.Value;
+            }
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
+            }
         }
 
         private void flyingCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (flyingCheckBox.Checked)
+            try
             {
-                speedTrackBar.Value = 20;
-                speedTrackBar.Maximum = 50;
-                speedTrackBar.Minimum = 5;
-                speedLabel.Text = text[153, lang] + speedTrackBar.Value;
+                if (flyingCheckBox.Checked)
+                {
+                    speedTrackBar.Value = 20;
+                    speedTrackBar.Maximum = 50;
+                    speedTrackBar.Minimum = 5;
+                    speedLabel.Text = text[153, lang] + speedTrackBar.Value;
+                }
+                else
+                {
+                    speedTrackBar.Value = 0;
+                    speedTrackBar.Maximum = 1000;
+                    speedTrackBar.Minimum = 0;
+                    speedLabel.Text = text[152, lang] + speedTrackBar.Value;
+                }
             }
-            else
+            catch (Exception exception1)
             {
-                speedTrackBar.Value = 0;
-                speedTrackBar.Maximum = 1000;
-                speedTrackBar.Minimum = 0;
-                speedLabel.Text = text[152, lang] + speedTrackBar.Value;
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 
@@ -4085,13 +4249,21 @@ namespace Mafia
 
         public string nameOfCard(int cardType, int cardNumber)
         {
-            if(amountOfSpecificCards[cardType] == 1)
+            try
             {
-                return cardNames[cardType, lang].ToString();
+                if (amountOfSpecificCards[cardType] == 1)
+                {
+                    return cardNames[cardType, lang].ToString();
+                }
+                else
+                {
+                    return (cardNames[cardType, lang] + " " + (cardNumber + 1)).ToString();
+                }
             }
-            else
+            catch (Exception exception1)
             {
-                return (cardNames[cardType, lang] + " " + (cardNumber + 1)).ToString();
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
+                return "error";
             }
         }
 
@@ -4113,40 +4285,56 @@ namespace Mafia
 
         public int getLeftPlayer(int player)
         {
-            int leftPlayer = -1;
-            int p = player;
-            for (int i = 0; i < numberOfPlayers && leftPlayer == -1; i++)
+            try
             {
-                p++;
-                if (p == numberOfPlayers)
+                int leftPlayer = -1;
+                int p = player;
+                for (int i = 0; i < numberOfPlayers && leftPlayer == -1; i++)
                 {
-                    p = 0;
+                    p++;
+                    if (p == numberOfPlayers)
+                    {
+                        p = 0;
+                    }
+                    if (players[p].alive && p != player)
+                    {
+                        leftPlayer = p;
+                    }
                 }
-                if (players[p].alive && p != player)
-                {
-                    leftPlayer = p;
-                }
+                return leftPlayer;
             }
-            return leftPlayer;
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
+                return -2;
+            }
         }
 
         public int getRightPlayer(int player)
         {
-            int rightPlayer = -1;
-            int p = player;
-            for (int i = 0; i < numberOfPlayers && rightPlayer == -1; i++)
+            try
             {
-                p--;
-                if (p < 0)
+                int rightPlayer = -1;
+                int p = player;
+                for (int i = 0; i < numberOfPlayers && rightPlayer == -1; i++)
                 {
-                    p = numberOfPlayers - 1;
+                    p--;
+                    if (p < 0)
+                    {
+                        p = numberOfPlayers - 1;
+                    }
+                    if (players[p].alive && p != player)
+                    {
+                        rightPlayer = p;
+                    }
                 }
-                if (players[p].alive && p != player)
-                {
-                    rightPlayer = p;
-                }
+                return rightPlayer;
             }
-            return rightPlayer;
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
+                return -3;
+            }
         }
 
         // functions for tunnels and drawing stuff
@@ -4163,7 +4351,15 @@ namespace Mafia
 
         public double distance(int x1, int y1, int x2, int y2)
         {
-            return Math.Sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+            try
+            {
+                return Math.Sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+            }
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
+                return -1;
+            }
         }
 
         public void addTunnel(int p1, int p2)
@@ -4280,24 +4476,33 @@ namespace Mafia
 
         public void drawBulletShoot(float x1, float y1, float x2, float y2)
         {
-            float speed = 20F;
-            this.Invoke((MethodInvoker)delegate {
-                speed = speedTrackBar.Value;
-            });
-            vector2D pos = new vector2D(x1, y1);
-            vector2D vel = new vector2D(x2 - x1, y2 - y1);
-            int time = (int)Math.Ceiling(vel.mag() / speed);
-            vel.setMag(speed);
-            int radius = 5;
-            for(int i = 0; i < time; i++)
+            try
             {
-                drawPlayers();
-                g.FillEllipse(Brushes.Black, pos.x - radius, pos.y - radius, radius * 2, radius * 2);
-                this.Invoke((MethodInvoker)delegate {
-                    pictureBox1.Image = bmp;
-                    pictureBox1.Update();
+                float speed = 20F;
+                this.Invoke((MethodInvoker)delegate
+                {
+                    speed = speedTrackBar.Value;
                 });
-                pos.add(vel);
+                vector2D pos = new vector2D(x1, y1);
+                vector2D vel = new vector2D(x2 - x1, y2 - y1);
+                int time = (int)Math.Ceiling(vel.mag() / speed);
+                vel.setMag(speed);
+                int radius = 5;
+                for (int i = 0; i < time; i++)
+                {
+                    drawPlayers();
+                    g.FillEllipse(Brushes.Black, pos.x - radius, pos.y - radius, radius * 2, radius * 2);
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        pictureBox1.Image = bmp;
+                        pictureBox1.Update();
+                    });
+                    pos.add(vel);
+                }
+            }
+            catch (Exception exception1)
+            {
+                MessageBox.Show("An error occurred:\n" + exception1); zapiszErrorDoTxt(exception1.ToString()); zapiszErrorDoTxt(exception1.ToString());
             }
         }
 

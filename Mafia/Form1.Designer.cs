@@ -340,7 +340,6 @@
             this.Controls.Add(this.flyingCheckBox);
             this.Controls.Add(this.speedLabel);
             this.Controls.Add(this.speedTrackBar);
-            this.Controls.Add(this.bombButton);
             this.Controls.Add(this.comboBoxLanguage);
             this.Controls.Add(this.undoButton);
             this.Controls.Add(this.removeCardCombobox);
@@ -362,9 +361,10 @@
             this.Controls.Add(this.numOfPlayersNumericUpDown);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.buttonStartNight);
+            this.Controls.Add(this.bombButton);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "Mafia v3.9";
+            this.Text = "Mafia v4.0";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
